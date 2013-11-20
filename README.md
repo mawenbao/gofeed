@@ -2,7 +2,7 @@
 
 **NOT FINISHED YET**
 
-gofeed parses a web page into full-text feed.
+gofeed parses some web pages into full-text feed. This simple program is written when I start to learn golang. So it should be buggy and may not be able to use currently.
 
 ## LICENSE
 
