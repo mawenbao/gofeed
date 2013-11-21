@@ -37,6 +37,15 @@ func TestParseJsonConfig(t *testing.T) {
     }
 }
 
+func TestUnifyURL(t *testing.T) {
+    rawURL := "atime.me"
+    unifiedURL := "http://atime.me"
+
+    if uniurl, err := unifyURL(rawURL); err != nil || uniurl != unifiedURL {
+        t.Fatalf("failed to unify raw url %s", rawURL)
+    }
+}
+
 func TestCrawl(t *testing.T) {
     url := "blog.atime.me/agreement.html"
     data, err := Crawl(url)
@@ -55,5 +64,35 @@ func TestCrawl(t *testing.T) {
         t.Fatalf("html data crawled from %s not equal to %s", url, testFile)
     }
 
+}
+
+func TestCheckPatterns(t *testing.T) {
+    invalidTargets := [...]Target {
+        Target{ IndexPattern: "", ContentPattern: "" },
+        Target{ IndexPattern: "abc", ContentPattern: "" },
+        Target{ IndexPattern: "abc", ContentPattern: "cde" },
+        Target{ IndexPattern: "abc{link}", ContentPattern: "cde" },
+        Target{ IndexPattern: "{title} {link}abc{title}", ContentPattern: "{content}" },
+        Target{ IndexPattern: "{*}abc{title}", ContentPattern: "{title}" },
+        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{title}{content}" },
+        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{link}{*}{content}" },
+    }
+
+    validTargets := [...]Target {
+        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{*}{content}" },
+        Target{ IndexPattern: "{link}abc{*}cde{title}", ContentPattern: "{content}" },
+    }
+
+    for _, tar := range invalidTargets {
+        if tar.CheckPatterns() {
+            t.Fatal("check patterns failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
+        }
+    }
+
+    for _, tar := range validTargets {
+        if !tar.CheckPatterns() {
+            t.Fatal("check pattern failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
+        }
+    }
 }
 

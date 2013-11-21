@@ -4,7 +4,6 @@ import (
     "os"
     "fmt"
     "flag"
-    "io/ioutil"
 )
 
 var (
@@ -34,6 +33,6 @@ func main() {
     */
 
     data, _ := Crawl("blog.atime.me/agreement.html")
-    ioutil.WriteFile("a.html", data, 0644)
+    fmt.Println(string(data))
 }
 

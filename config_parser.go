@@ -8,11 +8,11 @@ import(
 
 func ParseJsonConfig(path string) (targets TargetSlice, err error) {
     if configData, err := ioutil.ReadFile(path); nil != err {
-        log.Fatalf("%s: %s\n", path, err)
+        log.Printf("%s: %s\n", path, err)
     } else {
         err = json.Unmarshal(configData, &targets)
         if nil != err {
-            log.Fatalf("%s: %s\n", path, err)
+            log.Printf("%s: %s\n", path, err)
         }
     }
     return
