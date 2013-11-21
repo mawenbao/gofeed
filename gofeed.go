@@ -12,7 +12,7 @@ var (
 )
 
 func showUsage() {
-    fmt.Printf("Usage %s [-v][-f] URLS ...\n\n", os.Args[0])
+    fmt.Printf("Usage %s [-v][-f] json_config_file\n\n", os.Args[0])
     fmt.Printf("Flags:\n\n")
     flag.PrintDefaults()
 }
@@ -21,12 +21,12 @@ func main() {
     flag.Usage = showUsage
     flag.Parse()
 
-    urls := flag.Args()
-    if 0 == len(urls) {
+    args := flag.Args()
+    if 0 == len(args) || 1 < len(args) {
         flag.Usage()
         return
     }
 
-    fmt.Println("urls", urls)
+    fmt.Println(ParseJsonConfig(args[0]))
 }
 
