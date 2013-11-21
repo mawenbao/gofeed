@@ -4,11 +4,12 @@ import (
     "os"
     "fmt"
     "flag"
+    "io/ioutil"
 )
 
 var (
-    gVerbose = flag.Bool("v", false, "be verbose or not")
-    gFulltext = flag.Bool("f", false, "generate full-text feeds or not")
+    gVerbose = flag.Bool("v", false, "be verbose")
+    gFulltext = flag.Bool("f", false, "generate full-text feeds")
 )
 
 func showUsage() {
@@ -27,6 +28,12 @@ func main() {
         return
     }
 
-    fmt.Println(ParseJsonConfig(args[0]))
+    /*
+    _, err := ParseJsonConfig(args[0])
+    fmt.Println(err)
+    */
+
+    data, _ := Crawl("blog.atime.me/agreement.html")
+    ioutil.WriteFile("a.html", data, 0644)
 }
 

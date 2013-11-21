@@ -1,7 +1,7 @@
 {
     "Targets": [
         {
-            "URL": "http://blog.atime.me", 
+            "URL": "blog.atime.me", 
             "IndexPattern": "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>",
             "ContentPattern": "<div class=\"niu2-lastmod-box\">{*}<\/div>{content}<div id=\"content-comments\">", 
             "Path": "blog.atime.me.xml"

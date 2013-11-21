@@ -2,19 +2,21 @@ package main
 
 import(
     "testing"
+    "io/ioutil"
+    "bytes"
 )
 
 func TestParseJsonConfig(t *testing.T) {
-    targets := ParseJsonConfig("example_config.json")
+    targets, err := ParseJsonConfig("example_config.json")
     config_file := "example_config.json"
 
-    if 1 != len(targets.Targets) {
-        t.Fatal("Failed to parse json config file", config_file)
+    if nil != err || 1 != len(targets.Targets) {
+        t.Fatalf("Failed to parse json config file %s: %s\n", config_file, err)
     }
 
     feedTar := targets.Targets[0]
 
-    feedURL := `http://blog.atime.me`
+    feedURL := `blog.atime.me`
     if feedURL != feedTar.URL {
         t.Fatalf("%s: failed to parse url, expected %s, got %s\n", config_file, feedURL, feedTar.URL)
     }
@@ -33,5 +35,25 @@ func TestParseJsonConfig(t *testing.T) {
     if feedPath != feedTar.Path {
         t.Fatalf("%s: failed to parse path, expected %s, got %s\n", config_file, feedPath, feedTar.Path)
     }
+}
+
+func TestCrawl(t *testing.T) {
+    url := "blog.atime.me/agreement.html"
+    data, err := Crawl(url)
+    if nil != err {
+        t.Fatalf("failed to crawl %s: %s\n", url, err)
+    }
+
+    testFile := "test_data/test_crawl.html"
+    expectData, err := ioutil.ReadFile(testFile)
+
+    if nil != err {
+        t.Fatalf("failed to read %s: %s\n", testFile, err)
+    }
+
+    if 0 != bytes.Compare(expectData, data) {
+        t.Fatalf("html data crawled from %s not equal to %s", url, testFile)
+    }
+
 }
 

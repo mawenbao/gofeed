@@ -6,7 +6,7 @@ import(
     "encoding/json"
 )
 
-func ParseJsonConfig(path string) (targets TargetSlice) {
+func ParseJsonConfig(path string) (targets TargetSlice, err error) {
     if configData, err := ioutil.ReadFile(path); nil != err {
         log.Fatalf("%s: %s\n", path, err)
     } else {

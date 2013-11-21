@@ -1,5 +1,10 @@
 package main
 
+const(
+    SCHEME_SUFFIX = "://"
+    HTTP_SCHEME = "http"
+)
+
 type Target struct {
     URL string
     IndexPattern string
@@ -10,3 +15,4 @@ type Target struct {
 type TargetSlice struct {
     Targets []Target
 }
+
