@@ -2,8 +2,8 @@ package main
 
 import(
     "testing"
-    "io/ioutil"
-    "bytes"
+    _ "io/ioutil"
+    _ "bytes"
 )
 
 func TestParseJsonConfig(t *testing.T) {
@@ -46,6 +46,7 @@ func TestUnifyURL(t *testing.T) {
     }
 }
 
+/*
 func TestCrawl(t *testing.T) {
     url := "blog.atime.me/agreement.html"
     data, err := Crawl(url)
@@ -65,6 +66,7 @@ func TestCrawl(t *testing.T) {
     }
 
 }
+*/
 
 func TestCheckPatterns(t *testing.T) {
     invalidTargets := [...]Target {
@@ -94,5 +96,67 @@ func TestCheckPatterns(t *testing.T) {
             t.Fatal("check pattern failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
         }
     }
+}
+
+func TestMinifyHtml(t *testing.T) {
+    rawHtml := `<html>
+    <head>  </head>  
+  <body> Hello  world
+</body>
+</html>`
+    expectedHtml := "<html><head></head><body>Hello  world</body></html>"
+    if expectedHtml != string(MinifyHtml([]byte(rawHtml))) {
+        t.Fatal("failed to minify html")
+    }
+}
+
+func TestFilterHtmlWithoutPattern(t *testing.T) {
+    htmlData, err := Crawl("blog.atime.me")
+    if nil != err {
+        t.Fatal("failed to download web page")
+    }
+
+    targets, err := ParseJsonConfig("example_config.json")
+    if nil != err {
+        t.Fatal("failed to parse example_config.json")
+    }
+
+    for _, tar := range targets.Targets {
+        if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
+            t.Fatalf("filter without index pattern failed for target %s\n", tar.URL)
+        }
+    }
+}
+
+func TestParseIndexHtml(t *testing.T) {
+    htmlData, err := Crawl("blog.atime.me")
+    if nil != err {
+        t.Fatal("failed to download web page")
+    }
+
+    htmlData = MinifyHtml(htmlData)
+
+    /*
+    t.Log("===")
+    t.Log(string(htmlData))
+    t.Log("===")
+    */
+
+    targets, err := ParseJsonConfig("example_config.json")
+    if nil != err {
+        t.Fatal("failed to parse example_config.json")
+    }
+
+    for _, tar := range targets.Targets {
+        feed := ParseIndexHtml(tar, htmlData)
+        if nil == feed {
+            t.Fatalf("failed to parse index html %s\n", tar.URL)
+        }
+        t.Fatal(feed.Title, feed.Link, feed.Content)
+    }
+}
+
+func TestParseContentHtml(t *testing.T) {
+
 }
 

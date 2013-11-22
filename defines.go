@@ -9,10 +9,20 @@ const(
     SCHEME_SUFFIX = "://"
     HTTP_SCHEME = "http"
 
-    PATTERN_TITLE = "{title}"
-    PATTERN_LINK = "{link}"
-    PATTERN_CONTENT = "{content}"
+    TITLE_NAME = "title"
+    PATTERN_TITLE = "{" + TITLE_NAME + "}"
+    PATTERN_TITLE_REG = "(?P<" + TITLE_NAME + ">.*)"
+
+    LINK_NAME = "link"
+    PATTERN_LINK = "{" + LINK_NAME + "}"
+    PATTERN_LINK_REG = "(?P<" + LINK_NAME + ">.*)"
+
+    CONTENT_NAME = "content"
+    PATTERN_CONTENT = "{" + CONTENT_NAME + "}"
+    PATTERN_CONTENT_REG = "(?P<" + CONTENT_NAME + ">)"
+
     PATTERN_ANY = "{any}"
+    PATTERN_ANY_REG = ".*"
 )
 
 type Target struct {
@@ -34,10 +44,10 @@ type Feed struct {
 
 func PatternToRegex(pat string) string {
     r := strings.NewReplacer(
-        PATTERN_ANY, ".*",
-        PATTERN_TITLE, "",
-        PATTERN_LINK, "",
-        PATTERN_CONTENT, "")
+        PATTERN_ANY, PATTERN_ANY_REG,
+        PATTERN_TITLE, PATTERN_TITLE_REG,
+        PATTERN_LINK, PATTERN_LINK_REG,
+        PATTERN_CONTENT, PATTERN_CONTENT_REG)
 
     return r.Replace(pat)
 }
