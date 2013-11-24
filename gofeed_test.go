@@ -153,7 +153,7 @@ func TestParseIndexAndContentHtml(t *testing.T) {
         for _, entry := range entries {
             println("title", entry.Title)
             println("link", entry.Link)
-            println("content", string(entry.Content))
+            println("content length", len(entry.Content))
             println("=====\n")
         }
     }
