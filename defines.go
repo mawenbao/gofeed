@@ -11,15 +11,15 @@ const(
 
     TITLE_NAME = "title"
     PATTERN_TITLE = "{" + TITLE_NAME + "}"
-    PATTERN_TITLE_REG = "(?P<" + TITLE_NAME + ">.*)"
+    PATTERN_TITLE_REG = `(?P<` + TITLE_NAME + `>(?s).+?)`
 
     LINK_NAME = "link"
     PATTERN_LINK = "{" + LINK_NAME + "}"
-    PATTERN_LINK_REG = "(?P<" + LINK_NAME + ">.*)"
+    PATTERN_LINK_REG = `(?P<` + LINK_NAME + `>(?s).+?)`
 
     CONTENT_NAME = "content"
     PATTERN_CONTENT = "{" + CONTENT_NAME + "}"
-    PATTERN_CONTENT_REG = "(?P<" + CONTENT_NAME + ">)"
+    PATTERN_CONTENT_REG = "(?P<" + CONTENT_NAME + ">(?s).*?)"
 
     PATTERN_ANY = "{any}"
     PATTERN_ANY_REG = ".*"
@@ -36,7 +36,7 @@ type TargetSlice struct {
     Targets []Target
 }
 
-type Feed struct {
+type FeedEntry struct {
     Title string
     Link string
     Content []byte
@@ -54,7 +54,7 @@ func PatternToRegex(pat string) string {
 
 func (tar *Target) CheckPatterns() bool {
     if nil == tar {
-        log.Printf("invliad target, nil\n")
+        log.Printf("invliad target, nil")
         return false
     }
 
@@ -65,7 +65,7 @@ func (tar *Target) CheckPatterns() bool {
     }
 
     if 1 != strings.Count(tar.IndexPattern, PATTERN_TITLE) || 1 != strings.Count(tar.IndexPattern, PATTERN_LINK) {
-        log.Printf("index pattern %s should contain 1 %s and 1 %s \n", tar.IndexPattern, PATTERN_TITLE, PATTERN_LINK)
+        log.Printf("index pattern %s should contain 1 %s and 1 %s ", tar.IndexPattern, PATTERN_TITLE, PATTERN_LINK)
         return false
     }
 
@@ -76,7 +76,7 @@ func (tar *Target) CheckPatterns() bool {
     }
 
     if 1 != strings.Count(tar.ContentPattern, PATTERN_CONTENT) {
-        log.Printf("content pattern %s should contain 1 %s\n", tar.ContentPattern, PATTERN_CONTENT)
+        log.Printf("content pattern %s should contain 1 %s", tar.ContentPattern, PATTERN_CONTENT)
         return false
     }
 

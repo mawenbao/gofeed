@@ -7,8 +7,8 @@ import (
 )
 
 var(
-    PATTERN_ALL = [...]string { PATTERN_ANY, PATTERN_CONTENT, PATTERN_LINK, PATTERN_TITLE }
-    PATTERN_ALL_REGEX = regexp.MustCompile(strings.Join(PATTERN_ALL[:], "|"))
+    PATTERN_ALL = []string { PATTERN_ANY, PATTERN_CONTENT, PATTERN_LINK, PATTERN_TITLE }
+    PATTERN_ALL_REGEX = regexp.MustCompile(strings.Join(PATTERN_ALL, "|"))
 
     HTML_WHITESPACE_REGEX = regexp.MustCompile(`>\s+`)
     HTML_WHITESPACE_REGEX2 = regexp.MustCompile(`\s+<`)
@@ -35,101 +35,124 @@ func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
     return true
 }
 
-func ParseIndexHtml(tar Target, htmlData []byte) (feed *Feed) {
+func ParseIndexHtml(tar Target) (entries []FeedEntry, ok bool) {
+    htmlData, err := Crawl(tar.URL)
+    if nil != err {
+        log.Printf("failed to download index web page %s", tar.URL)
+        return
+    }
+
+    htmlData = MinifyHtml(htmlData)
+
     if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
-        log.Printf("no match for target %s\n", tar.URL)
+        log.Printf("no match for target %s", tar.URL)
         return
     }
 
     indexRegStr := PatternToRegex(tar.IndexPattern)
     indexReg, err := regexp.Compile(indexRegStr)
     if nil != err {
-        log.Printf("failed to index compile regular expression %s\n", indexRegStr)
+        log.Printf("failed to index compile regular expression %s", indexRegStr)
         return
     }
 
-    match := indexReg.FindSubmatch(htmlData)
-    if nil == match {
-        log.Printf("failed to match index html %s, pattern %s did not match\n", tar.URL, indexRegStr)
+    matches := indexReg.FindAllSubmatch(htmlData, -1)
+    if nil == matches {
+        log.Printf("failed to match index html %s, pattern %s did not match", tar.URL, indexRegStr)
         return
     }
 
-    if 3 != len(match) {
-        log.Printf("failed to find regexp, got %s\n", strings.Join(indexReg.SubexpNames(), " AND "))
-        return
-    }
-
-    for _, m := range match {
-        println("===")
-        println(string(m))
-        println("===")
-    }
-
-    println("LENGTH", len(match), len(indexReg.SubexpNames()))
-
-    for i, patName := range indexReg.SubexpNames() {
-        // skip whole match 
-        if 0 == i {
-            continue
+    entries = make([]FeedEntry, len(matches))
+    for matchInd, match := range matches {
+        entry := &entries[matchInd]
+        for patInd, patName := range indexReg.SubexpNames() {
+            // skip whole match 
+            if 0 == patInd {
+                continue
+            }
+            // no anonymous group
+            if "" == patName {
+                log.Printf("encountered anonymous group in pattern %s", indexRegStr)
+                return
+            } else if TITLE_NAME == patName {
+                entry.Title = string(match[patInd])
+            } else if LINK_NAME == patName {
+                entry.Link = string(match[patInd])
+            }
         }
-        // no anonymous group
-        if "" == patName {
-            log.Printf("encountered anonymous group in pattern %s", indexRegStr)
+
+        if "" == entry.Title || "" == entry.Link {
+            log.Printf("empty title <%s> or empty link <%s>", entry.Title, entry.Link)
             return
-        } else if TITLE_NAME == patName {
-            feed.Title = string(match[i])
-        } else if LINK_NAME == patName {
-            feed.Link = string(match[i])
         }
     }
 
-    if "" == feed.Title || "" == feed.Link {
-        log.Printf("empty title <%s> or empty link <%s>\n", feed.Title, feed.Link)
-        return nil
-    }
-
+    ok = true
     return
 }
 
-func ParseContentHtml(tar Target, htmlData []byte, feed *Feed) {
-    if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
-        log.Printf("no match for target %s\n", tar.URL)
-        return
-    }
-
+func ParseContentHtml(tar Target, entries []FeedEntry) (ok bool) {
     contentRegStr := PatternToRegex(tar.ContentPattern)
-    contentReg, err := regexp.Compile(contentRegStr)
-    if nil != err {
-        log.Printf("failed to compile content regular expression %s\n", contentRegStr)
-        return
-    }
 
-    match := contentReg.FindSubmatch(htmlData)
-    if nil == match {
-        log.Printf("failed to match content html %s, pattern %s match failed\n", tar.URL, contentRegStr)
-    }
+    for entryInd, _ := range entries {
+        entry := &entries[entryInd]
 
-    if 2 != len(match) {
-        log.Printf("failed to find regexp, got %s\n", strings.Join(contentReg.SubexpNames(), " AND "))
-        return
-    }
-
-    for i, patName := range contentReg.SubexpNames() {
-        // skip whole match 
-        if 0 == i {
+        if "" == entry.Link {
+            log.Printf("url of feed entry %s is empty", entry.Title)
+            // just skip emtpy feed entry
             continue
         }
-        // no anonymous group
-        if "" == patName {
-            log.Printf("encountered anonymous group in pattern %s", contentRegStr)
+
+        htmlData, err := Crawl(entry.Link)
+        if nil != err {
+            log.Printf("failed to download web page %s", entry.Link)
             return
-        } else if CONTENT_NAME == patName {
-            feed.Content = match[i]
+        }
+
+        htmlData = MinifyHtml(htmlData)
+        if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
+            log.Printf("no match for target %s", tar.URL)
             return
+        }
+
+        contentReg, err := regexp.Compile(contentRegStr)
+        if nil != err {
+            log.Printf("failed to compile content regular expression %s", contentRegStr)
+            return
+        }
+
+        match := contentReg.FindSubmatch(htmlData)
+        if nil == match {
+            println("===")
+            println(string(htmlData))
+            println("===")
+
+            log.Printf("failed to match content html %s, pattern %s match failed", entry.Link, contentRegStr)
+            return
+        }
+
+        for i, patName := range contentReg.SubexpNames() {
+            // skip whole match 
+            if 0 == i {
+                continue
+            }
+            // no anonymous group
+            //if "" == patName {
+              //  log.Printf("encountered anonymous group in pattern %s", contentRegStr)
+             //   return
+            //} else if CONTENT_NAME == patName {
+            if CONTENT_NAME == patName {
+                entry.Content = match[i]
+            }
+        }
+
+        if 0 == len(entry.Content) {
+            // just print a warning message if content is empty
+            log.Printf("empty content for feed entry %s", entry.Title)
         }
     }
 
-    log.Printf("empty content for feed %s", feed.Title)
+    ok = true
     return
 }
 
