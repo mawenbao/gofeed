@@ -123,10 +123,6 @@ func ParseContentHtml(tar Target, entries []FeedEntry) (ok bool) {
 
         match := contentReg.FindSubmatch(htmlData)
         if nil == match {
-            println("===")
-            println(string(htmlData))
-            println("===")
-
             log.Printf("failed to match content html %s, pattern %s match failed", entry.Link, contentRegStr)
             return
         }
@@ -137,10 +133,10 @@ func ParseContentHtml(tar Target, entries []FeedEntry) (ok bool) {
                 continue
             }
             // no anonymous group
-            //if "" == patName {
-              //  log.Printf("encountered anonymous group in pattern %s", contentRegStr)
-             //   return
-            //} else if CONTENT_NAME == patName {
+            if "" == patName {
+                log.Printf("encountered anonymous group in pattern %s", contentRegStr)
+                return
+            } else if CONTENT_NAME == patName {
             if CONTENT_NAME == patName {
                 entry.Content = match[i]
             }
