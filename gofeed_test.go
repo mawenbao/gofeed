@@ -6,7 +6,6 @@ import(
     _ "bytes"
 )
 
-/*
 func TestParseJsonConfig(t *testing.T) {
     targets, err := ParseJsonConfig("example_config.json")
     config_file := "example_config.json"
@@ -37,7 +36,6 @@ func TestParseJsonConfig(t *testing.T) {
         t.Fatalf("%s: failed to parse path, expected %s, got %s", config_file, feedPath, feedTar.Path)
     }
 }
-*/
 
 func TestUnifyURL(t *testing.T) {
     rawURL := "atime.me"
