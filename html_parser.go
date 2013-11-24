@@ -137,7 +137,6 @@ func ParseContentHtml(tar Target, entries []FeedEntry) (ok bool) {
                 log.Printf("encountered anonymous group in pattern %s", contentRegStr)
                 return
             } else if CONTENT_NAME == patName {
-            if CONTENT_NAME == patName {
                 entry.Content = match[i]
             }
         }
