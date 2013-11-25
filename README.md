@@ -4,7 +4,7 @@ Gofeed was inspired by feed43.com.
 
 **NOT FINISHED YET**
 
-gofeed parses some web pages into full-text feed. This simple program is written when I start to learn golang. So it may be buggy and not ready to use currently.
+gofeed parses some web pages into full-text feed. This simple program is written when I start to learn golang. So it may not be ready to use currently.
 
 ## Install
 
@@ -13,13 +13,13 @@ gofeed parses some web pages into full-text feed. This simple program is written
 ## Configuration Example
 See example_config.json.
 
-## Supported Regular Expressions
-Note that all the regular expressions are lazy by default.
+## Supported Patterns
+Note that all the regular expressions are lazy.
 
 *  {any}: match any character including newline
-*  {title}: title of feed entry, title is extracted in Feed.URL page
-*  {link}: hyper link of feed entry, link is extracted in Feed.URL page
-*  {content}: full-text content of feed entry, content is extracted in the corresponding {link} page
+*  {title}: title of feed entry, title is matched against the Feed.URL page
+*  {link}: hyper link of feed entry, link is matched against the Feed.URL page
+*  {content}: full-text content of feed entry, content is matched against the corresponding {link} page
  
 ## TODO
 

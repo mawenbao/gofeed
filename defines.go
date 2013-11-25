@@ -7,9 +7,11 @@ import(
 )
 
 const(
+    // used for unifying urls
     SCHEME_SUFFIX = "://"
     HTTP_SCHEME = "http"
 
+    // used for extracting feed title/link/content
     TITLE_NAME = "title"
     PATTERN_TITLE = "{" + TITLE_NAME + "}"
     PATTERN_TITLE_REG = `(?P<` + TITLE_NAME + `>(?s).+?)`
@@ -24,6 +26,11 @@ const(
 
     PATTERN_ANY = "{any}"
     PATTERN_ANY_REG = "(?s).*?"
+
+    // db related consts
+    DB_DRIVER = "sqlite3"
+    DB_NAME = "cache.db"
+    DB_HTML_CACHE_TABLE = "html_cache"
 )
 
 var(
@@ -46,13 +53,20 @@ type Target struct {
     ReqInterval time.Duration `json:"Request.Interval"`
 }
 
-type TargetSlice struct {
-    Targets []Target
+type Config struct {
+    CacheDB string `json:"CacheDB"`
+    Targets []Target `json:"Targets"`
 }
 
 type FeedEntry struct {
     Title string
     Link string
     Content []byte
+}
+
+type HtmlCache struct {
+    URL string
+    LastModify string
+    Html []byte
 }
 

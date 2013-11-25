@@ -1,4 +1,5 @@
 {
+    "CacheDB": "cache.db",
     "Targets": [
         {
             "Feed.URL": "blog.atime.me", 

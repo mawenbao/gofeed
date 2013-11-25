@@ -2,19 +2,19 @@ package main
 
 import(
     "testing"
-    _ "io/ioutil"
-    _ "bytes"
+    "os"
+    "bytes"
 )
 
 func TestParseJsonConfig(t *testing.T) {
-    targets, err := ParseJsonConfig("example_config.json")
     config_file := "example_config.json"
+    conf, err := ParseJsonConfig(config_file)
 
     if nil != err {
         t.Fatalf("Failed to parse json config file %s: %s", config_file, err)
     }
 
-    feedTar := targets.Targets[0]
+    feedTar := conf.Targets[0]
 
     feedURL := `blog.atime.me`
     if feedURL != feedTar.URL {
@@ -52,9 +52,9 @@ func TestUnifyURL(t *testing.T) {
 }
 
 /*
-func TestCrawl(t *testing.T) {
+func TestCrawlHtml(t *testing.T) {
     url := "blog.atime.me/agreement.html"
-    data, err := Crawl(url)
+    cache, err := CrawlHtml(url)
     if nil != err {
         t.Fatalf("failed to crawl %s: %s", url, err)
     }
@@ -66,12 +66,49 @@ func TestCrawl(t *testing.T) {
         t.Fatalf("failed to read %s: %s", testFile, err)
     }
 
-    if 0 != bytes.Compare(expectData, data) {
+    if 0 != bytes.Compare(expectData, cache.Html) {
         t.Fatalf("html data crawled from %s not equal to %s", url, testFile)
     }
 
 }
 */
+
+func TestFetchHtml(t *testing.T) {
+    conf, err := ParseJsonConfig("example_config.json")
+    if nil != err {
+        t.Fatalf("failed to parse example_config.json")
+    }
+
+    if _, err = os.Stat(conf.CacheDB); nil == err {
+        os.Remove(conf.CacheDB)
+    }
+
+    CreateDbScheme(conf.CacheDB)
+
+    url := "blog.atime.me/agreement.html"
+    cache, err := FetchHtml(url, conf.CacheDB)
+    if nil != err {
+        t.Fatalf("failed to fetch html %s", err)
+    }
+
+    if url != cache.URL {
+        t.Fatalf("wrong html cache, url not match")
+    }
+
+    cache2, err := GetHtmlCacheByURL(url, conf.CacheDB)
+    if nil != err {
+        t.Fatalf("html cache not saved for url %s", url)
+    }
+
+    if cache.URL != cache2.URL ||
+        cache.LastModify != cache2.LastModify ||
+        bytes.Compare(cache.Html, cache2.Html) {
+
+        t.Fatalf("html cache not match")
+    }
+
+    os.Remove(conf.CacheDB)
+}
 
 func TestCheckPatterns(t *testing.T) {
     invalidTargets := [...]Target {
@@ -116,12 +153,12 @@ func TestMinifyHtml(t *testing.T) {
 }
 
 func TestFilterHtmlWithoutPattern(t *testing.T) {
-    targets, err := ParseJsonConfig("example_config.json")
+    conf, err := ParseJsonConfig("example_config.json")
     if nil != err {
         t.Fatal("failed to parse example_config.json")
     }
 
-    tar := targets.Targets[0]
+    tar := conf.Targets[0]
     htmlData, err := Crawl(tar.URL)
     if nil != err {
         t.Fatal("failed to download web page")
@@ -133,13 +170,56 @@ func TestFilterHtmlWithoutPattern(t *testing.T) {
     }
 }
 
-func TestParseIndexAndContentHtml(t *testing.T) {
-    targets, err := ParseJsonConfig("example_config.json")
+func TestDB(t *testing.T) {
+    conf, err := ParseJsonConfig("example_config.json")
     if nil != err {
         t.Fatal("failed to parse example_config.json")
     }
 
-    for _, tar := range targets.Targets {
+    if _, err = os.Stat(conf.CacheDB); nil == err {
+        os.Remove(conf.CacheDB)
+    }
+
+    err = CreateDbScheme(conf.CacheDB)
+    if nil != err {
+        t.Fatalf("failed to create db %s: %s", conf.CacheDB, err)
+    }
+
+    cache := []HtmlCache {
+        HtmlCache { URL: "blog.atime.me", LastModify: "Mon, 25 Nov 2013 19:43:31 GMT", Html: []byte("hello world") },
+        HtmlCache { URL: "atime.me", LastModify: "Mon, 25 Nov 2013 16:43:31 GMT", Html: []byte("hello world") } }
+
+    err = PutHtmlCache(conf.CacheDB, cache)
+    if nil != err {
+        t.Fatalf("failed to insert records to db %s: %s", conf.CacheDB, err)
+    }
+
+    cache2, err := GetHtmlCacheByURL(conf.CacheDB, "no.cache")
+    if nil == err {
+        t.Fatalf("should not get html cache from an non-exist url")
+    }
+
+    cache2, err = GetHtmlCacheByURL(conf.CacheDB, cache[0].URL)
+    if nil != err {
+        t.Fatalf("failed to get html cache for url %s", cache[0].URL)
+    }
+    if cache2.URL != cache[0].URL ||
+        cache2.LastModify != cache[0].LastModify ||
+        0 != bytes.Compare(cache2.Html, cache[0].Html) {
+
+        t.Fatalf("got wrong html cache")
+    }
+
+    os.Remove(conf.CacheDB)
+}
+
+func TestParseIndexAndContentHtml(t *testing.T) {
+    conf, err := ParseJsonConfig("example_config.json")
+    if nil != err {
+        t.Fatal("failed to parse example_config.json")
+    }
+
+    for _, tar := range conf.Targets {
         entries, ok := ParseIndexHtml(tar)
         if !ok {
             t.Fatalf("failed to parse index html %s", tar.URL)
