@@ -6,6 +6,12 @@ Gofeed was inspired by feed43.com.
 
 gofeed parses some web pages into full-text feed. This simple program is written when I start to learn golang. So it may not be ready to use currently.
 
+## Dependency
+
+*  go-sqlite3
+
+        go get github.com/mattn/go-sqlite3
+
 ## Install
 
     go get github.com/mawenbao/gofeed
