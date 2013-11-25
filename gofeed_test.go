@@ -91,13 +91,13 @@ func TestCheckPatterns(t *testing.T) {
     }
 
     for _, tar := range invalidTargets {
-        if tar.CheckPatterns() {
+        if CheckPatterns(&tar) {
             t.Fatal("check patterns failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
         }
     }
 
     for _, tar := range validTargets {
-        if !tar.CheckPatterns() {
+        if !CheckPatterns(&tar) {
             t.Fatal("check pattern failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
         }
     }

@@ -7,17 +7,9 @@ import (
     "time"
 )
 
-var(
-    PATTERN_ALL = []string { PATTERN_ANY, PATTERN_CONTENT, PATTERN_LINK, PATTERN_TITLE }
-    PATTERN_ALL_REGEX = regexp.MustCompile(strings.Join(PATTERN_ALL, "|"))
-
-    HTML_WHITESPACE_REGEX = regexp.MustCompile(`>\s+`)
-    HTML_WHITESPACE_REGEX2 = regexp.MustCompile(`\s+<`)
-)
-
 func MinifyHtml(htmlData []byte) []byte {
-    htmlData = HTML_WHITESPACE_REGEX.ReplaceAll(htmlData, []byte(">"))
-    htmlData = HTML_WHITESPACE_REGEX2.ReplaceAll(htmlData, []byte("<"))
+    htmlData = HTML_WHITESPACE_REGEX.ReplaceAll(htmlData, HTML_WHITESPACE_REPL)
+    htmlData = HTML_WHITESPACE_REGEX2.ReplaceAll(htmlData, HTML_WHITESPACE_REPL2)
     return htmlData
 }
 
@@ -73,7 +65,7 @@ func ParseIndexHtml(tar Target) (entries []FeedEntry, ok bool) {
             }
             // no anonymous group
             if "" == patName {
-                log.Printf("encountered anonymous group in pattern %s", indexRegStr)
+                log.Printf("encountered anonymous group with pattern %s", indexRegStr)
                 return
             } else if TITLE_NAME == patName {
                 entry.Title = string(match[patInd])

@@ -1,9 +1,9 @@
 package main
 
 import(
-    "log"
     "strings"
     "time"
+    "regexp"
 )
 
 const(
@@ -26,6 +26,18 @@ const(
     PATTERN_ANY_REG = "(?s).*?"
 )
 
+var(
+    // used for filtering html
+    PATTERN_ALL = []string { PATTERN_ANY, PATTERN_CONTENT, PATTERN_LINK, PATTERN_TITLE }
+    PATTERN_ALL_REGEX = regexp.MustCompile(strings.Join(PATTERN_ALL, "|"))
+
+    // used for minifying html
+    HTML_WHITESPACE_REGEX = regexp.MustCompile(`>\s+`)
+    HTML_WHITESPACE_REGEX2 = regexp.MustCompile(`\s+<`)
+    HTML_WHITESPACE_REPL = []byte(">")
+    HTML_WHITESPACE_REPL2 = []byte("<")
+)
+
 type Target struct {
     URL string `json:"Feed.URL"`
     IndexPattern string `json:"Feed.IndexPattern"`
@@ -42,51 +54,5 @@ type FeedEntry struct {
     Title string
     Link string
     Content []byte
-}
-
-func PatternToRegex(pat string) string {
-    r := strings.NewReplacer(
-        PATTERN_ANY, PATTERN_ANY_REG,
-        PATTERN_TITLE, PATTERN_TITLE_REG,
-        PATTERN_LINK, PATTERN_LINK_REG,
-        PATTERN_CONTENT, PATTERN_CONTENT_REG)
-
-    return r.Replace(pat)
-}
-
-func (tar *Target) CheckPatterns() bool {
-    if nil == tar {
-        log.Printf("invliad target, nil")
-        return false
-    }
-
-    // IndexPattern should contain both {title} and {link}
-    if "" == tar.IndexPattern {
-        log.Print("index pattern is empty")
-        return false
-    }
-
-    if 1 != strings.Count(tar.IndexPattern, PATTERN_TITLE) || 1 != strings.Count(tar.IndexPattern, PATTERN_LINK) {
-        log.Printf("index pattern %s should contain 1 %s and 1 %s ", tar.IndexPattern, PATTERN_TITLE, PATTERN_LINK)
-        return false
-    }
-
-    // ContentPattern should contain {content} and should not contain {title} nor {link}
-    if "" == tar.ContentPattern {
-        log.Print("content pattern is empty")
-        return false
-    }
-
-    if 1 != strings.Count(tar.ContentPattern, PATTERN_CONTENT) {
-        log.Printf("content pattern %s should contain 1 %s", tar.ContentPattern, PATTERN_CONTENT)
-        return false
-    }
-
-    if strings.Contains(tar.ContentPattern, PATTERN_TITLE) || strings.Contains(tar.ContentPattern, PATTERN_LINK) {
-        log.Printf("%s should not contain %s or %s", tar.ContentPattern, PATTERN_TITLE, PATTERN_LINK)
-        return false
-    }
-
-    return true
 }
 
