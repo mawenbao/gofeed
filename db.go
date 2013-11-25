@@ -28,9 +28,12 @@ func CreateDbScheme(dbPath string) (err error) {
     sqlCreateTables := fmt.Sprintf(`
     CREATE TABLE %s (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        url text NOT NULL UNIQUE,
-        lastmod TEXT NOT NULL,
-        html BLOB NOT NULL
+        url TEXT NOT NULL UNIQUE,
+        cache_control TEXT,
+        lastmod TEXT,
+        etag TEXT,
+        expires TEXT,
+        html BLOB
     );
     `, DB_HTML_CACHE_TABLE)
 
@@ -44,6 +47,13 @@ func CreateDbScheme(dbPath string) (err error) {
 }
 
 func PutHtmlCache(dbPath string, cache []HtmlCache) (err error) {
+    _, err = os.Stat(dbPath)
+    if nil != err {
+        // db file not exists
+        log.Printf("db %s not exists", dbPath)
+        return
+    }
+
     db, err := sql.Open(DB_DRIVER, dbPath)
     if nil != err {
         log.Printf("failed to open db %s: %s", dbPath, err)
@@ -52,7 +62,7 @@ func PutHtmlCache(dbPath string, cache []HtmlCache) (err error) {
     defer db.Close()
 
     sqlInsertHtml := fmt.Sprintf(`
-    INSERT INTO %s (url, lastmod, html) VALUES (?, ?, ?);
+    INSERT INTO %s (url, cache_control, lastmod, etag, expires, html) VALUES (?, ?, ?, ?, ?, ?);
     `, DB_HTML_CACHE_TABLE)
 
     trans, err := db.Begin()
@@ -68,8 +78,10 @@ func PutHtmlCache(dbPath string, cache []HtmlCache) (err error) {
     }
     defer statmt.Close()
 
+    urls := ""
     for _, c := range cache {
-        _, err = statmt.Exec(c.URL, c.LastModify, c.Html)
+        _, err = statmt.Exec(c.URL, c.CacheControl, c.LastModified, c.Etag, c.Expires, c.Html)
+        urls += c.URL + " "
         if nil != err {
             log.Printf("failed to insert html cache: %s", err)
             return
@@ -78,14 +90,24 @@ func PutHtmlCache(dbPath string, cache []HtmlCache) (err error) {
 
     err = trans.Commit()
     if nil != err {
-        log.Printf("failed to commit transaction: %s", err)
+        log.Printf("failed to save urls %s: %s", urls, err)
         return
     }
 
+    if *gVerbose {
+        log.Printf("successully saved cache for %s", urls)
+    }
     return
 }
 
 func GetHtmlCacheByURL(dbPath, url string) (cache HtmlCache, err error) {
+    _, err = os.Stat(dbPath)
+    if nil != err {
+        // db file not exists
+        log.Printf("db %s not exists", dbPath)
+        return
+    }
+
     db, err := sql.Open(DB_DRIVER, dbPath)
     if nil != err {
         log.Printf("failed to open db %s: %s", dbPath, err)
@@ -93,7 +115,7 @@ func GetHtmlCacheByURL(dbPath, url string) (cache HtmlCache, err error) {
     }
     defer db.Close()
 
-    sqlSelect := fmt.Sprintf("SELECT lastmod, html FROM %s WHERE url = ?", DB_HTML_CACHE_TABLE)
+    sqlSelect := fmt.Sprintf("SELECT url, cache_control, lastmod, etag, expires, html FROM %s WHERE url = ?", DB_HTML_CACHE_TABLE)
 
     statmt, err := db.Prepare(sqlSelect)
     if nil != err {
@@ -102,10 +124,15 @@ func GetHtmlCacheByURL(dbPath, url string) (cache HtmlCache, err error) {
     }
     defer statmt.Close()
 
-    cache.URL = url
-    err = statmt.QueryRow(url).Scan(&cache.LastModify, &cache.Html)
+    err = statmt.QueryRow(url).Scan(
+        &cache.URL,
+        &cache.CacheControl,
+        &cache.LastModified,
+        &cache.Etag,
+        &cache.Expires,
+        &cache.Html)
     if nil != err {
-        log.Printf("failed to select html cache with url %s: %s", url, err)
+        //log.Printf("failed to select html cache with url %s: %s", url, err)
         return
     }
 

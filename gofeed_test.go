@@ -52,9 +52,10 @@ func TestUnifyURL(t *testing.T) {
 }
 
 /*
-func TestCrawlHtml(t *testing.T) {
+func TestRequestHtml(t *testing.T) {
     url := "blog.atime.me/agreement.html"
-    cache, err := CrawlHtml(url)
+    cache := HtmlCache { URL: url }
+    err := requestHtml(&cache)
     if nil != err {
         t.Fatalf("failed to crawl %s: %s", url, err)
     }
@@ -95,14 +96,14 @@ func TestFetchHtml(t *testing.T) {
         t.Fatalf("wrong html cache, url not match")
     }
 
-    cache2, err := GetHtmlCacheByURL(url, conf.CacheDB)
+    cache2, err := GetHtmlCacheByURL(conf.CacheDB, url)
     if nil != err {
         t.Fatalf("html cache not saved for url %s", url)
     }
 
     if cache.URL != cache2.URL ||
-        cache.LastModify != cache2.LastModify ||
-        bytes.Compare(cache.Html, cache2.Html) {
+        cache.LastModified != cache2.LastModified ||
+        0 != bytes.Compare(cache.Html, cache2.Html) {
 
         t.Fatalf("html cache not match")
     }
@@ -159,11 +160,12 @@ func TestFilterHtmlWithoutPattern(t *testing.T) {
     }
 
     tar := conf.Targets[0]
-    htmlData, err := Crawl(tar.URL)
+    cache := HtmlCache { URL: tar.URL }
+    err = requestHtml(&cache)
     if nil != err {
         t.Fatal("failed to download web page")
     }
-    htmlData = MinifyHtml(htmlData)
+    htmlData := MinifyHtml(cache.Html)
 
     if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
         t.Fatalf("filter without index pattern failed for target %s", tar.URL)
@@ -186,8 +188,9 @@ func TestDB(t *testing.T) {
     }
 
     cache := []HtmlCache {
-        HtmlCache { URL: "blog.atime.me", LastModify: "Mon, 25 Nov 2013 19:43:31 GMT", Html: []byte("hello world") },
-        HtmlCache { URL: "atime.me", LastModify: "Mon, 25 Nov 2013 16:43:31 GMT", Html: []byte("hello world") } }
+        HtmlCache { URL: "blog.atime.me", LastModified: "Mon, 25 Nov 2013 19:43:31 GMT", Html: []byte("hello world") },
+        HtmlCache { URL: "atime.me", LastModified: "Mon, 25 Nov 2013 16:43:31 GMT", Html: []byte("hello world") },
+    }
 
     err = PutHtmlCache(conf.CacheDB, cache)
     if nil != err {
@@ -204,7 +207,7 @@ func TestDB(t *testing.T) {
         t.Fatalf("failed to get html cache for url %s", cache[0].URL)
     }
     if cache2.URL != cache[0].URL ||
-        cache2.LastModify != cache[0].LastModify ||
+        cache2.LastModified != cache[0].LastModified ||
         0 != bytes.Compare(cache2.Html, cache[0].Html) {
 
         t.Fatalf("got wrong html cache")
@@ -219,23 +222,34 @@ func TestParseIndexAndContentHtml(t *testing.T) {
         t.Fatal("failed to parse example_config.json")
     }
 
+    if _, err = os.Stat(conf.CacheDB); nil == err {
+        os.Remove(conf.CacheDB)
+    }
+
+    CreateDbScheme(conf.CacheDB)
+
     for _, tar := range conf.Targets {
-        entries, ok := ParseIndexHtml(tar)
+        entries, ok := ParseIndexHtml(conf, tar)
         if !ok {
             t.Fatalf("failed to parse index html %s", tar.URL)
         }
 
         for _, entry := range entries {
-            if !ParseContentHtml(tar, &entry) {
+            if !ParseContentHtml(conf, tar, &entry) {
                 t.Fatalf("failed to parse content html %s", tar.URL)
             }
 
             println("title", entry.Title)
             println("link", entry.Link)
             println("content length", len(entry.Content))
-            println("content summary", string(entry.Content)[:200])
-            println("=====\n")
+            if len(entry.Content) > 200 {
+                println("content summary", string(entry.Content)[:200])
+            } else {
+                println("content", string(entry.Content))
+            }
         }
     }
+
+    os.Remove(conf.CacheDB)
 }
 

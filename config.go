@@ -17,6 +17,7 @@ func ParseJsonConfig(path string) (conf Config, err error) {
         }
     }
 
+    // default settings
     // convert CacheDB to absolute path
     conf.CacheDB, err = filepath.Abs(conf.CacheDB)
     if nil != err {

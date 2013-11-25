@@ -66,7 +66,13 @@ type FeedEntry struct {
 
 type HtmlCache struct {
     URL string
-    LastModify string
+    Modified bool
+
+    CacheControl string
+    LastModified string // http.TimeFormat
+    Etag string
+    Expires string // http.TimeFormat
+
     Html []byte
 }
 

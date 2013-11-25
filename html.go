@@ -28,14 +28,14 @@ func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
     return true
 }
 
-func ParseIndexHtml(tar Target) (entries []FeedEntry, ok bool) {
-    htmlData, err := Crawl(tar.URL)
+func ParseIndexHtml(conf Config, tar Target) (entries []FeedEntry, ok bool) {
+    cache, err := FetchHtml(tar.URL, conf.CacheDB)
     if nil != err {
         log.Printf("failed to download index web page %s", tar.URL)
         return
     }
 
-    htmlData = MinifyHtml(htmlData)
+    htmlData := MinifyHtml(cache.Html)
 
     if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
         log.Printf("no match for target %s", tar.URL)
@@ -84,7 +84,7 @@ func ParseIndexHtml(tar Target) (entries []FeedEntry, ok bool) {
     return
 }
 
-func ParseContentHtml(tar Target, entry *FeedEntry) (ok bool) {
+func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
     // wait some time
     if *gVerbose {
         log.Printf("waiting for %d seconds before request content html %s", tar.ReqInterval, tar.URL)
@@ -97,13 +97,13 @@ func ParseContentHtml(tar Target, entry *FeedEntry) (ok bool) {
         return true
     }
 
-    htmlData, err := Crawl(entry.Link)
+    cache, err := FetchHtml(entry.Link, conf.CacheDB)
     if nil != err {
         log.Printf("failed to download web page %s", entry.Link)
         return
     }
 
-    htmlData = MinifyHtml(htmlData)
+    htmlData := MinifyHtml(cache.Html)
     if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
         log.Printf("no match for target %s", tar.URL)
         return
