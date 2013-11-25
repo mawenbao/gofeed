@@ -6,7 +6,7 @@ Gofeed was inspired by feed43.com.
 
 gofeed parses some web pages into full-text feed. This simple program is written when I start to learn golang. So it may not be ready to use currently.
 
-## Dependency
+## Dependencies
 
 *  go-sqlite3
 
@@ -29,7 +29,7 @@ Note that all the regular expressions are lazy.
  
 ## TODO
 
-1. Cache old requests: use sqlite to cache downloaded web pages and save their lastmod time.
+1. <del>Cache old requests: use sqlite to cache downloaded web pages and save their lastmod time.</del>
 2. Add alternative methods to extract feed title, link and content from html
     1. xpath
 3. Better readme file
