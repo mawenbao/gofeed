@@ -4,6 +4,7 @@ import (
     "strings"
     "log"
     "regexp"
+    "time"
 )
 
 var(
@@ -21,7 +22,7 @@ func MinifyHtml(htmlData []byte) []byte {
 }
 
 func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
-    html := string(MinifyHtml(htmlData))
+    html := string(htmlData)
     for _, str := range PATTERN_ALL_REGEX.Split(pattern, -1) {
         if "" == str {
             continue
@@ -91,60 +92,61 @@ func ParseIndexHtml(tar Target) (entries []FeedEntry, ok bool) {
     return
 }
 
-func ParseContentHtml(tar Target, entries []FeedEntry) (ok bool) {
+func ParseContentHtml(tar Target, entry *FeedEntry) (ok bool) {
+    // wait some time
+    if *gVerbose {
+        log.Printf("waiting for %d seconds before request content html %s", tar.ReqInterval, tar.URL)
+    }
+    time.Sleep(tar.ReqInterval * time.Second)
+
+    if "" == entry.Link {
+        log.Printf("url of feed entry %s is empty", entry.Title)
+        // just skip emtpy feed entry
+        return true
+    }
+
+    htmlData, err := Crawl(entry.Link)
+    if nil != err {
+        log.Printf("failed to download web page %s", entry.Link)
+        return
+    }
+
+    htmlData = MinifyHtml(htmlData)
+    if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
+        log.Printf("no match for target %s", tar.URL)
+        return
+    }
+
     contentRegStr := PatternToRegex(tar.ContentPattern)
+    contentReg, err := regexp.Compile(contentRegStr)
+    if nil != err {
+        log.Printf("failed to compile content regular expression %s", contentRegStr)
+        return
+    }
 
-    for entryInd, _ := range entries {
-        entry := &entries[entryInd]
+    match := contentReg.FindSubmatch(htmlData)
+    if nil == match {
+        log.Printf("failed to match content html %s, pattern %s match failed", entry.Link, contentRegStr)
+        return
+    }
 
-        if "" == entry.Link {
-            log.Printf("url of feed entry %s is empty", entry.Title)
-            // just skip emtpy feed entry
+    for i, patName := range contentReg.SubexpNames() {
+        // skip whole match 
+        if 0 == i {
             continue
         }
-
-        htmlData, err := Crawl(entry.Link)
-        if nil != err {
-            log.Printf("failed to download web page %s", entry.Link)
+        // no anonymous group
+        if "" == patName {
+            log.Printf("encountered anonymous group in pattern %s", contentRegStr)
             return
+        } else if CONTENT_NAME == patName {
+            entry.Content = match[i]
         }
+    }
 
-        htmlData = MinifyHtml(htmlData)
-        if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
-            log.Printf("no match for target %s", tar.URL)
-            return
-        }
-
-        contentReg, err := regexp.Compile(contentRegStr)
-        if nil != err {
-            log.Printf("failed to compile content regular expression %s", contentRegStr)
-            return
-        }
-
-        match := contentReg.FindSubmatch(htmlData)
-        if nil == match {
-            log.Printf("failed to match content html %s, pattern %s match failed", entry.Link, contentRegStr)
-            return
-        }
-
-        for i, patName := range contentReg.SubexpNames() {
-            // skip whole match 
-            if 0 == i {
-                continue
-            }
-            // no anonymous group
-            if "" == patName {
-                log.Printf("encountered anonymous group in pattern %s", contentRegStr)
-                return
-            } else if CONTENT_NAME == patName {
-                entry.Content = match[i]
-            }
-        }
-
-        if 0 == len(entry.Content) {
-            // just print a warning message if content is empty
-            log.Printf("empty content for feed entry %s", entry.Title)
-        }
+    if 0 == len(entry.Content) {
+        // just print a warning message if content is empty
+        log.Printf("empty content for feed entry %s", entry.Title)
     }
 
     ok = true

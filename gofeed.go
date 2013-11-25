@@ -30,9 +30,9 @@ func main() {
     /*
     _, err := ParseJsonConfig(args[0])
     fmt.Println(err)
-    */
 
     data, _ := Crawl("blog.atime.me/agreement.html")
     fmt.Println(string(data))
+    */
 }
 

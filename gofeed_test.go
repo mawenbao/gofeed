@@ -10,7 +10,7 @@ func TestParseJsonConfig(t *testing.T) {
     targets, err := ParseJsonConfig("example_config.json")
     config_file := "example_config.json"
 
-    if nil != err || 1 != len(targets.Targets) {
+    if nil != err {
         t.Fatalf("Failed to parse json config file %s: %s", config_file, err)
     }
 
@@ -116,20 +116,20 @@ func TestMinifyHtml(t *testing.T) {
 }
 
 func TestFilterHtmlWithoutPattern(t *testing.T) {
-    htmlData, err := Crawl("blog.atime.me")
-    if nil != err {
-        t.Fatal("failed to download web page")
-    }
-
     targets, err := ParseJsonConfig("example_config.json")
     if nil != err {
         t.Fatal("failed to parse example_config.json")
     }
 
-    for _, tar := range targets.Targets {
-        if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
-            t.Fatalf("filter without index pattern failed for target %s", tar.URL)
-        }
+    tar := targets.Targets[0]
+    htmlData, err := Crawl(tar.URL)
+    if nil != err {
+        t.Fatal("failed to download web page")
+    }
+    htmlData = MinifyHtml(htmlData)
+
+    if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
+        t.Fatalf("filter without index pattern failed for target %s", tar.URL)
     }
 }
 
@@ -145,15 +145,15 @@ func TestParseIndexAndContentHtml(t *testing.T) {
             t.Fatalf("failed to parse index html %s", tar.URL)
         }
 
-        if !ParseContentHtml(tar, entries) {
-            t.Fatalf("failed to parse content html %s", tar.URL)
-        }
-
-        println("entries", len(entries))
         for _, entry := range entries {
+            if !ParseContentHtml(tar, &entry) {
+                t.Fatalf("failed to parse content html %s", tar.URL)
+            }
+
             println("title", entry.Title)
             println("link", entry.Link)
             println("content length", len(entry.Content))
+            println("content summary", string(entry.Content)[:200])
             println("=====\n")
         }
     }

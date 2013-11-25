@@ -3,6 +3,7 @@ package main
 import(
     "log"
     "strings"
+    "time"
 )
 
 const(
@@ -22,14 +23,15 @@ const(
     PATTERN_CONTENT_REG = "(?P<" + CONTENT_NAME + ">(?s).*?)"
 
     PATTERN_ANY = "{any}"
-    PATTERN_ANY_REG = ".*"
+    PATTERN_ANY_REG = "(?s).*?"
 )
 
 type Target struct {
-    URL string
-    IndexPattern string
-    ContentPattern string
-    Path string
+    URL string `json:"Feed.URL"`
+    IndexPattern string `json:"Feed.IndexPattern"`
+    ContentPattern string `json:"Feed.ContentPattern"`
+    Path string `json:"Feed.Path"`
+    ReqInterval time.Duration `json:"Request.Interval"`
 }
 
 type TargetSlice struct {

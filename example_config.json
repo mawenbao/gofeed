@@ -1,10 +1,19 @@
 {
     "Targets": [
         {
-            "URL": "blog.atime.me", 
-            "IndexPattern": "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>",
-            "ContentPattern": "<div class=\"clearfix visible-xs niu2-clearfix\"></div>{content}<div id=\"content-comments\">", 
-            "Path": "blog.atime.me.xml"
+            "Feed.URL": "blog.atime.me", 
+            "Feed.IndexPattern": "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>",
+            "Feed.ContentPattern": "<div class=\"clearfix visible-xs niu2-clearfix\"></div>{content}<div id=\"content-comments\">", 
+            "Feed.Path": "blog.atime.me.xml",
+            "Request.Interval": 1
+        },
+        {
+            "Feed.URL": "http://www.timetimetime.net",
+            "Feed.IndexPattern": "<div class=\"left_contant_title a5\">{any}<a href=\"{link}\" title=\"{title}\"",
+            "Feed.ContentPattern": "<div class=\"neiz1 a7\">{any}</div>{content}</div>",
+            "Feed.Path": "timetimetime.xml",
+            "Request.Interval": 10
         }
+
     ]
 }
