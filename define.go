@@ -11,17 +11,17 @@ const(
     GOFEED_NAME = "gofeed"
     GOFEED_VERSION = "0.1"
 
+    // used to normalize urls
+    HTTP_SCHEME = "http://"
+    HTTPS_SCHEME = "https://"
+
     // feed related
     FEED_TYPE = "rss"
     FEED_VERSION = "2.0"
 
-    // used for unifying urls
-    SCHEME_SUFFIX = "://"
-    HTTP_SCHEME = "http"
-
+    // used for extracting feed title/link/content
     HTML_TITLE_REG = `(?s)<\s*?html.*?<\s*?head.*?<\s*?title\s*?>(?P<title>.+)</\s*?title`
 
-    // used for extracting feed title/link/content
     TITLE_NAME = "title"
     PATTERN_TITLE = "{" + TITLE_NAME + "}"
     PATTERN_TITLE_REG = `(?P<` + TITLE_NAME + `>(?s).+?)`
@@ -114,7 +114,7 @@ const(
 type HtmlCache struct {
     Status int // default is CACHE_NOT_MODIFIED
 
-    URL string // must be unique and not null
+    URL string // must be normalized by url.Parse
     Title string
     CacheControl string
     LastModified string // http.TimeFormat

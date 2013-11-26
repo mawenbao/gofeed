@@ -17,7 +17,7 @@ func TestParseJsonConfig(t *testing.T) {
 
     feedTar := conf.Targets[0]
 
-    feedURL := `blog.atime.me`
+    feedURL := "http://blog.atime.me"
     if feedURL != feedTar.URL {
         t.Fatalf("%s: failed to parse url, expected %s, got %s", config_file, feedURL, feedTar.URL)
     }
@@ -38,23 +38,9 @@ func TestParseJsonConfig(t *testing.T) {
     }
 }
 
-func TestUnifyURL(t *testing.T) {
-    rawURL := "atime.me"
-    unifiedURL := "http://atime.me"
-
-    if uniurl := unifyURL(rawURL); uniurl != unifiedURL {
-        t.Fatalf("failed to unify raw url %s", rawURL)
-    }
-
-    rawURL = "http://atime.me"
-    if uniurl := unifyURL(rawURL); uniurl != unifiedURL {
-        t.Fatalf("failed to unify raw url %s", rawURL)
-    }
-}
-
 /*
 func TestRequestHtml(t *testing.T) {
-    url := "blog.atime.me/agreement.html"
+    url := "http://blog.atime.me/agreement.html"
     cache := HtmlCache { URL: url }
     err := requestHtml(&cache)
     if nil != err {
@@ -88,7 +74,7 @@ func TestFetchHtml(t *testing.T) {
     CreateDbScheme(conf.CacheDB)
 
     // new cache
-    url := "blog.atime.me/agreement.html"
+    url := "http://blog.atime.me/agreement.html"
     cache, err := FetchHtml(url, conf.CacheDB)
     if nil != err {
         t.Fatalf("failed to fetch html %s", err)
@@ -150,7 +136,7 @@ func TestCheckPatterns(t *testing.T) {
 }
 
 func TestExtractHtmlTitle(t *testing.T) {
-    cache := HtmlCache{ URL: "blog.atime.me" }
+    cache := HtmlCache{ URL: "http://blog.atime.me" }
     err := RequestHtml(&cache)
     if nil != err {
         t.Fatalf("failed to download %s", cache.URL)
@@ -210,8 +196,8 @@ func TestDB(t *testing.T) {
     }
 
     cache := []HtmlCache {
-        HtmlCache { URL: "blog.atime.me", LastModified: "Mon, 25 Nov 2013 19:43:31 GMT", Html: []byte("hello world") },
-        HtmlCache { URL: "atime.me", LastModified: "Mon, 25 Nov 2013 16:43:31 GMT", Html: []byte("hello world") },
+        HtmlCache { URL: "http://blog.atime.me", LastModified: "Mon, 25 Nov 2013 19:43:31 GMT", Html: []byte("hello world") },
+        HtmlCache { URL: "http://atime.me", LastModified: "Mon, 25 Nov 2013 16:43:31 GMT", Html: []byte("hello world") },
     }
 
     err = PutHtmlCache(conf.CacheDB, cache)
@@ -311,10 +297,11 @@ func TestParseIndexAndContentHtml(t *testing.T) {
             println("title", entry.Title)
             println("link", entry.Link)
             println("content length", len(entry.Content))
-            if len(entry.Content) > 200 {
-                println("content summary", string(entry.Content)[:200])
+            var entryDesc []rune = []rune(string(entry.Content))
+            if len(entryDesc) > 100 {
+                println("content summary", string(entryDesc)[:100])
             } else {
-                println("content", string(entry.Content))
+                println("content", string(entryDesc))
             }
         }
     }

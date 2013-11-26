@@ -4,7 +4,6 @@ import(
     "net/http"
     "log"
     "io/ioutil"
-    "strings"
     "time"
 )
 
@@ -14,15 +13,9 @@ func RequestHtml(cache *HtmlCache) (err error) {
         log.Printf("trying to download web page %s", cache.URL)
     }
 
-    unifiedURL := unifyURL(cache.URL)
-
-    if *gVerbose && cache.URL != unifiedURL {
-        log.Printf("url %s unified to %s", cache.URL, unifiedURL)
-    }
-
-    req, err := http.NewRequest("GET", unifiedURL, nil)
+    req, err := http.NewRequest("GET", cache.URL, nil)
     if nil != err {
-        log.Printf("failed to create http request for %s: %s", unifiedURL, err)
+        log.Printf("failed to create http request for %s: %s", cache.URL, err)
         return
     }
 
@@ -86,8 +79,8 @@ func RequestHtml(cache *HtmlCache) (err error) {
 }
 
 // try to retrive html from cache first
-func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
-   cache, err = GetHtmlCacheByURL(dbPath, rawURL)
+func FetchHtml(normalURL, dbPath string) (cache HtmlCache, err error) {
+   cache, err = GetHtmlCacheByURL(dbPath, normalURL)
 
    if nil != err {
        // cache not found
@@ -110,14 +103,14 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
        }
    }
 
-   cache.URL = rawURL
+   cache.URL = normalURL
    err = RequestHtml(&cache)
    if nil != err {
        if CACHE_NEW == cache.Status {
-           log.Printf("failed to download web page %s, just ignore it", rawURL)
+           log.Printf("failed to download web page %s, just ignore it", normalURL)
            return
        } else {
-           log.Printf("failed to download web page %s, use cache instead", rawURL)
+           log.Printf("failed to download web page %s, use cache instead", normalURL)
        }
    }
 
@@ -137,15 +130,5 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
    }
 
    return
-}
-
-func unifyURL(rawURL string) (unifiedURL string) {
-    unifiedURL = rawURL
-
-    if !strings.HasPrefix(rawURL, HTTP_SCHEME) {
-        unifiedURL = HTTP_SCHEME + SCHEME_SUFFIX + rawURL
-    }
-
-    return
 }
 

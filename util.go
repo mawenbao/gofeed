@@ -1,6 +1,7 @@
 package main
 
 import(
+    "strings"
     "log"
     "net/http"
 )
@@ -25,5 +26,13 @@ func GetLaterTimeStr(a, b string) (result string, err error) {
     }
 
     return
+}
+
+// normalize url
+func NormalizeURLStr(rawString string) string {
+    if !strings.HasPrefix(rawString, HTTP_SCHEME) && !strings.HasPrefix(rawString, HTTPS_SCHEME) {
+        rawString = HTTP_SCHEME + rawString
+    }
+    return rawString
 }
 

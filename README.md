@@ -16,9 +16,9 @@ This simple program was written when I started to learn golang. So I tried to re
  
 ## Things need to be improved
 
-*  The crawler only understands tcp protocol.
-*  Lacking URL normalization.
 *  Little documentation.
+*  No enough tests.
+*  Maybe more...
 
 ## More functions on the todo list
 

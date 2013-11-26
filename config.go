@@ -5,6 +5,7 @@ import(
     "log"
     "encoding/json"
     "path/filepath"
+    "net/url"
 )
 
 func ParseJsonConfig(path string) (conf Config, err error) {
@@ -30,13 +31,21 @@ func ParseJsonConfig(path string) (conf Config, err error) {
     // check target settings
     for i := 0; i < len(conf.Targets); i++ {
         tar := &conf.Targets[i]
+        // abs feed path
         tar.FeedPath, err = filepath.Abs(tar.FeedPath)
         if nil != err {
             log.Fatalf("error abs feed path %s for target %s", tar.FeedPath, tar.URL)
         }
+        // index pattern and content pattern must not be empty
         if "" == tar.IndexPattern || "" == tar.ContentPattern {
             log.Fatal("error parsing configuration: empty index/content pattern")
         }
+        // normalize url
+        normalURL, err := url.Parse(NormalizeURLStr(tar.URL))
+        if nil != err {
+            log.Fatalf("error parsing target url %s: %s", tar.URL, err)
+        }
+        tar.URL = normalURL.String()
     }
     return
 }

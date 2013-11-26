@@ -5,6 +5,7 @@ import (
     "log"
     "regexp"
     "time"
+    "net/url"
 )
 
 func ExtractHtmlTitle(htmlData []byte) string {
@@ -65,6 +66,13 @@ func ParseIndexHtml(conf Config, tar Target) (indexCache HtmlCache, entries []Fe
         return
     }
 
+    // should have checked target url when parsing json config
+    baseURL, err := url.Parse(tar.URL)
+    if nil != err {
+        log.Printf("error parsing index url %s: %s", tar.URL, err)
+        return
+    }
+
     entries = make([]FeedEntry, len(matches))
     for matchInd, match := range matches {
         entry := &entries[matchInd]
@@ -81,12 +89,15 @@ func ParseIndexHtml(conf Config, tar Target) (indexCache HtmlCache, entries []Fe
                 entry.Title = string(match[patInd])
             } else if LINK_NAME == patName {
                 entry.Link = string(match[patInd])
+                // normalize entry link which may be relative
+                var entryURL *url.URL
+                entryURL, err = baseURL.Parse(entry.Link)
+                if nil != err {
+                    log.Printf("error parsing entry link %s: %s", entry.Link, err)
+                } else {
+                    entry.Link = entryURL.String()
+                }
             }
-        }
-
-        if "" == entry.Title || "" == entry.Link {
-            log.Printf("empty title <%s> or empty link <%s>", entry.Title, entry.Link)
-            return
         }
     }
 
