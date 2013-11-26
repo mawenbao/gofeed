@@ -113,7 +113,7 @@ func TestFetchHtml(t *testing.T) {
     // use old cache
     cache4, err := FetchHtml(url, conf.CacheDB)
     if nil != err || CACHE_NOT_MODIFIED != cache4.Status {
-        t.Fatalf("failed to reuse html cache for %s: %s", url, err)
+        t.Fatalf("failed to reuse html cache of %s: %s", url, err)
     }
 
     os.Remove(conf.CacheDB)
@@ -226,7 +226,7 @@ func TestDB(t *testing.T) {
 
     cache2, err = GetHtmlCacheByURL(conf.CacheDB, cache[0].URL)
     if nil != err {
-        t.Fatalf("failed to get html cache for url %s", cache[0].URL)
+        t.Fatalf("failed to get html cache of url %s", cache[0].URL)
     }
     if cache2.URL != cache[0].URL ||
         cache2.LastModified != cache[0].LastModified ||

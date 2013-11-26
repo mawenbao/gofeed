@@ -9,10 +9,11 @@
             "Request.Interval": 0
         },
         {
-            "Feed.URL": "http://blog.atime.me/index2.html",
-            "Feed.IndexPattern": "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>",
-            "Feed.ContentPattern": "<div class=\"clearfix visible-xs niu2-clearfix\"></div>{description}<div id=\"content-comments\">",
-            "Feed.Path": "blog.atime.me.xml"
+            "Feed.URL": "http://www.timetimetime.net",
+            "Feed.IndexPattern": "<div class=\"left_contant_title a5\">{any}<a href=\"{link}\" title=\"{title}\"",
+            "Feed.ContentPattern": "<div class=\"neiz1 a7\">{any}</div>{description}</div>",
+            "Feed.Path": "timetimetime.xml",
+            "Request.Interval": 10 
         }
 
     ]

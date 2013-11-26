@@ -56,7 +56,7 @@ func RequestHtml(cache *HtmlCache) (err error) {
         if CACHE_NEW != cache.Status {
             cache.Status = CACHE_MODIFIED
             if *gVerbose {
-                log.Printf("cache for %s has been modified", cache.URL)
+                log.Printf("cache of %s has been modified", cache.URL)
             }
         }
         cache.Html, err = ioutil.ReadAll(resp.Body)
@@ -105,7 +105,7 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
            cache.LastModified = ""
            cache.CacheControl = ""
            if *gVerbose {
-               log.Printf("cache for %s has expired", cache.URL)
+               log.Printf("cache of %s has expired", cache.URL)
            }
        }
    }

@@ -5,6 +5,8 @@ import(
     "fmt"
     "flag"
     "log"
+    "time"
+    "net/http"
     "io/ioutil"
 )
 
@@ -52,6 +54,8 @@ func main() {
         log.Printf("found cache database %s", conf.CacheDB)
     }
 
+    targetMap := make(map[string]*TargetGroup)
+
     for _, tar := range conf.Targets {
         // parse feed entry title and link
         indexCache, entries, ok := ParseIndexHtml(conf, tar)
@@ -67,18 +71,41 @@ func main() {
             }
         }
 
-        // generate rss2 feed
-        feedStr, err := GenerateRss2Feed(indexCache, entries)
+        var tarGrp *TargetGroup
+        if grp, ok := targetMap[tar.FeedPath]; ok {
+            tarGrp = grp
+            // use the latest LastModified
+            tarGrp.IndexCache.LastModified, err = GetLaterTimeStr(tarGrp.IndexCache.LastModified, indexCache.LastModified)
+            if nil != err {
+                log.Printf("[ERROR] failed to get later time from %s and %s", tarGrp.IndexCache.LastModified, indexCache.LastModified)
+                // on time parse error, use current time
+                tarGrp.IndexCache.LastModified = time.Now().Format(http.TimeFormat)
+            }
+        } else {
+            tarGrp = new(TargetGroup)
+            // use the first target's index html cache
+            tarGrp.FeedPath = tar.FeedPath
+            tarGrp.IndexCache = indexCache
+            targetMap[tar.FeedPath] = tarGrp
+        }
+
+        tarGrp.Targets = append(tarGrp.Targets, tar)
+        tarGrp.Entries = append(tarGrp.Entries, entries...)
+    }
+
+    // generate rss2 feed
+    for _, grp := range targetMap {
+        feedStr, err := GenerateRss2Feed(grp.IndexCache, grp.Entries)
         if nil != err {
             log.Fatalf("[ERROR] failed to generate rss")
         }
 
         if *gVerbose {
-            log.Printf("saving feed at %s", tar.FeedPath)
+            log.Printf("saving feed at %s", grp.FeedPath)
         }
-        err = ioutil.WriteFile(tar.FeedPath, feedStr, 0644)
+        err = ioutil.WriteFile(grp.FeedPath, feedStr, 0644)
         if nil != err {
-            log.Fatal("[ERROR] failed to save feed at %s", tar.FeedPath)
+            log.Fatal("[ERROR] failed to save feed at %s", grp.FeedPath)
         }
     }
 }

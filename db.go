@@ -187,7 +187,7 @@ func PutHtmlCache(dbPath string, caches []HtmlCache) (err error) {
 
     if *gVerbose {
         for _, c := range caches {
-            log.Printf("successully saved cache for %s", c.URL)
+            log.Printf("successully saved cache of %s", c.URL)
         }
     }
     return
@@ -208,7 +208,7 @@ func UpdateHtmlCache(dbPath string, caches []HtmlCache) (err error) {
 
     if *gVerbose {
         for _, c := range caches {
-            log.Printf("successully updated cache for %s", c.URL)
+            log.Printf("successully updated cache of %s", c.URL)
         }
     }
     return

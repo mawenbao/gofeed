@@ -63,6 +63,13 @@ type Target struct {
     ReqInterval time.Duration `json:"Request.Interval"`
 }
 
+type TargetGroup struct {
+    FeedPath string
+    IndexCache HtmlCache
+    Entries []FeedEntry
+    Targets []Target
+}
+
 type Config struct {
     CacheDB string `json:"CacheDB"`
     Targets []Target `json:"Targets"`
