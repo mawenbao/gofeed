@@ -4,6 +4,7 @@ import(
     "testing"
     "os"
     "bytes"
+    "path/filepath"
 )
 
 func TestParseJsonConfig(t *testing.T) {
@@ -26,14 +27,14 @@ func TestParseJsonConfig(t *testing.T) {
         t.Fatalf("%s: failed to parse index pattern, expected %s, got %s", config_file, feedIndexPattern, feedTar.IndexPattern)
     }
 
-    feedContentPattern := `<div class="clearfix visible-xs niu2-clearfix"></div>{content}<div id="content-comments">`
+    feedContentPattern := `<div class="clearfix visible-xs niu2-clearfix"></div>{description}<div id="content-comments">`
     if feedContentPattern != feedTar.ContentPattern {
         t.Fatalf("%s: failed to parse content pattern, expected %s, got %s", config_file, feedContentPattern, feedTar.ContentPattern)
     }
 
-    feedPath := `blog.atime.me.xml`
-    if feedPath != feedTar.Path {
-        t.Fatalf("%s: failed to parse path, expected %s, got %s", config_file, feedPath, feedTar.Path)
+    feedPath, _ := filepath.Abs(`blog.atime.me.xml`)
+    if feedPath != feedTar.FeedPath {
+        t.Fatalf("%s: failed to parse path, expected %s, got %s", config_file, feedPath, feedTar.FeedPath)
     }
 }
 
@@ -124,27 +125,41 @@ func TestCheckPatterns(t *testing.T) {
         Target{ IndexPattern: "abc", ContentPattern: "" },
         Target{ IndexPattern: "abc", ContentPattern: "cde" },
         Target{ IndexPattern: "abc{link}", ContentPattern: "cde" },
-        Target{ IndexPattern: "{title} {link}abc{title}", ContentPattern: "{content}" },
+        Target{ IndexPattern: "{title} {link}abc{title}", ContentPattern: "{description}" },
         Target{ IndexPattern: "{*}abc{title}", ContentPattern: "{title}" },
-        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{title}{content}" },
-        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{link}{*}{content}" },
+        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{title}{description}" },
+        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{link}{*}{description}" },
     }
 
     validTargets := [...]Target {
-        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{*}{content}" },
-        Target{ IndexPattern: "{link}abc{*}cde{title}", ContentPattern: "{content}" },
+        Target{ IndexPattern: "{link}abc{title}", ContentPattern: "{*}{description}" },
+        Target{ IndexPattern: "{link}abc{*}cde{title}", ContentPattern: "{description}" },
     }
 
     for _, tar := range invalidTargets {
         if CheckPatterns(&tar) {
-            t.Fatal("check patterns failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
+            t.Fatalf("check patterns failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
         }
     }
 
     for _, tar := range validTargets {
         if !CheckPatterns(&tar) {
-            t.Fatal("check pattern failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
+            t.Fatalf("check pattern failed: IndexPattern %s, ContentPattern %s", tar.IndexPattern, tar.ContentPattern)
         }
+    }
+}
+
+func TestExtractHtmlTitle(t *testing.T) {
+    cache := HtmlCache{ URL: "blog.atime.me" }
+    err := RequestHtml(&cache)
+    if nil != err {
+        t.Fatalf("failed to download %s", cache.URL)
+    }
+
+    expectedTitle := "MWB日常笔记"
+    realTitle := ExtractHtmlTitle(cache.Html)
+    if expectedTitle != realTitle {
+        t.Fatalf("title mismatch, expected %s, got %s", expectedTitle, realTitle)
     }
 }
 
@@ -168,7 +183,7 @@ func TestFilterHtmlWithoutPattern(t *testing.T) {
 
     tar := conf.Targets[0]
     cache := HtmlCache { URL: tar.URL }
-    err = requestHtml(&cache)
+    err = RequestHtml(&cache)
     if nil != err {
         t.Fatal("failed to download web page")
     }
@@ -236,6 +251,41 @@ func TestDB(t *testing.T) {
     os.Remove(conf.CacheDB)
 }
 
+func TestGenerateRss2Feed(t *testing.T) {
+    conf, err := ParseJsonConfig("example_config.json")
+    if nil != err {
+        t.Fatal("failed to parse example_config.json")
+    }
+
+    if len(conf.Targets) < 1 {
+        t.Fatalf("failed to parse example_config.json, targets number %d", len(conf.Targets))
+    }
+
+    if _, err = os.Stat(conf.CacheDB); nil == err {
+        os.Remove(conf.CacheDB)
+    }
+    CreateDbScheme(conf.CacheDB)
+
+    tar := conf.Targets[0]
+    indexCache, entries, ok := ParseIndexHtml(conf, tar)
+    if !ok {
+        t.Fatalf("failed to parse index html %s", tar.URL)
+    }
+
+    for i := 0; i < len(entries); i++ {
+        if !ParseContentHtml(conf, tar, &entries[i]) {
+            t.Fatalf("failed to parse content html %s", tar.URL)
+        }
+    }
+
+    _, err = GenerateRss2Feed(indexCache, entries)
+    if nil != err {
+        t.Fatalf("failed to generate rss")
+    }
+
+    os.Remove(conf.CacheDB)
+}
+
 func TestParseIndexAndContentHtml(t *testing.T) {
     conf, err := ParseJsonConfig("example_config.json")
     if nil != err {
@@ -245,11 +295,10 @@ func TestParseIndexAndContentHtml(t *testing.T) {
     if _, err = os.Stat(conf.CacheDB); nil == err {
         os.Remove(conf.CacheDB)
     }
-
     CreateDbScheme(conf.CacheDB)
 
     for _, tar := range conf.Targets {
-        entries, ok := ParseIndexHtml(conf, tar)
+        _, entries, ok := ParseIndexHtml(conf, tar)
         if !ok {
             t.Fatalf("failed to parse index html %s", tar.URL)
         }

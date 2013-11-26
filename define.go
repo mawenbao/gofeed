@@ -4,12 +4,22 @@ import(
     "strings"
     "time"
     "regexp"
+    "encoding/xml"
 )
 
 const(
+    GOFEED_NAME = "gofeed"
+    GOFEED_VERSION = "0.1"
+
+    // feed related
+    FEED_TYPE = "rss"
+    FEED_VERSION = "2.0"
+
     // used for unifying urls
     SCHEME_SUFFIX = "://"
     HTTP_SCHEME = "http"
+
+    HTML_TITLE_REG = `(?s)<\s*?html.*?<\s*?head.*?<\s*?title\s*?>(?P<title>.+)</\s*?title`
 
     // used for extracting feed title/link/content
     TITLE_NAME = "title"
@@ -20,7 +30,7 @@ const(
     PATTERN_LINK = "{" + LINK_NAME + "}"
     PATTERN_LINK_REG = `(?P<` + LINK_NAME + `>(?s).+?)`
 
-    CONTENT_NAME = "content"
+    CONTENT_NAME = "description"
     PATTERN_CONTENT = "{" + CONTENT_NAME + "}"
     PATTERN_CONTENT_REG = "(?P<" + CONTENT_NAME + ">(?s).*?)"
 
@@ -49,7 +59,7 @@ type Target struct {
     URL string `json:"Feed.URL"`
     IndexPattern string `json:"Feed.IndexPattern"`
     ContentPattern string `json:"Feed.ContentPattern"`
-    Path string `json:"Feed.Path"`
+    FeedPath string `json:"Feed.Path"`
     ReqInterval time.Duration `json:"Request.Interval"`
 }
 
@@ -62,6 +72,30 @@ type FeedEntry struct {
     Title string
     Link string
     Content []byte
+    Cache *HtmlCache
+}
+
+type Rss2Feed struct {
+    XMLName xml.Name `xml:"rss"`
+    Version string `xml:"version,attr"`
+    Channel Rss2Channel `xml:"channel"`
+}
+
+type Rss2Channel struct {
+    Title string `xml:"title"`
+    Link string `xml:"link"`
+    Description string `xml:"description"`
+    PubDate string `xml:"pubDate"`
+    Generator string `xml:"generator"`
+    Items []Rss2Item `xml:"item"`
+}
+
+type Rss2Item struct {
+    Title string `xml:"title"`
+    Link string `xml:"link"`
+    Description string `xml:"description",chardata`
+    PubDate string `xml:"pubDate"`
+    Guid string `xml:"guid"`
 }
 
 const(
@@ -73,7 +107,8 @@ const(
 type HtmlCache struct {
     Status int // default is CACHE_NOT_MODIFIED
 
-    URL string
+    URL string // must be unique and not null
+    Title string
     CacheControl string
     LastModified string // http.TimeFormat
     Etag string
@@ -88,3 +123,4 @@ type DBNoRecordError struct {
 func (nre DBNoRecordError) Error() string {
     return "db query returned empty record set"
 }
+

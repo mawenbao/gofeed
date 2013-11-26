@@ -28,7 +28,8 @@ func CreateDbScheme(dbPath string) (err error) {
     sqlCreateTables := fmt.Sprintf(`
     CREATE TABLE %s (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        url TEXT NOT NULL ,
+        url TEXT NOT NULL UNIQUE,
+        title TEXT,
         cache_control TEXT,
         lastmod TEXT,
         etag TEXT,
@@ -135,7 +136,7 @@ func ExecInsertUpdateSQL(caches []HtmlCache, dbPath string, sqlStr string) (err 
 
     urls := ""
     for _, c := range caches {
-        _, err = statmt.Exec(c.URL, c.CacheControl, c.LastModified, c.Etag, c.Expires, c.Html)
+        _, err = statmt.Exec(c.URL, c.Title, c.CacheControl, c.LastModified, c.Etag, c.Expires, c.Html)
         urls += c.URL + " "
         if nil != err {
             log.Printf("failed to exec insert/update sql %s: %s", sqlStr, err)
@@ -175,7 +176,7 @@ func GetHtmlCacheByURL(dbPath, url string) (cache HtmlCache, err error) {
 
 func PutHtmlCache(dbPath string, caches []HtmlCache) (err error) {
     sqlInsertHtml := fmt.Sprintf(`
-    INSERT INTO %s (url, cache_control, lastmod, etag, expires, html) VALUES (?, ?, ?, ?, ?, ?);
+    INSERT INTO %s (url, title, cache_control, lastmod, etag, expires, html) VALUES (?, ?, ?, ?, ?, ?, ?);
     `, DB_HTML_CACHE_TABLE)
 
     err = ExecInsertUpdateSQL(caches, dbPath, sqlInsertHtml)
@@ -196,7 +197,7 @@ func UpdateHtmlCache(dbPath string, caches []HtmlCache) (err error) {
     sqlUpdateHtml := ""
     for _, c := range caches {
         sqlUpdateHtml += fmt.Sprintf(`
-        UPDATE %s SET url = ?, cache_control = ?, lastmod = ?, etag = ?, expires = ?, html = ? WHERE url = '%s';
+        UPDATE %s SET url = ?, title = ?, cache_control = ?, lastmod = ?, etag = ?, expires = ?, html = ? WHERE url = '%s';
         `, DB_HTML_CACHE_TABLE, c.URL)
     }
     err = ExecInsertUpdateSQL(caches, dbPath, sqlUpdateHtml)

@@ -7,6 +7,15 @@ import (
     "time"
 )
 
+func ExtractHtmlTitle(htmlData []byte) string {
+    titleReg := regexp.MustCompile(HTML_TITLE_REG)
+    matches := titleReg.FindSubmatch(htmlData)
+    if len(matches) != 2 {
+        return ""
+    }
+    return string(matches[1])
+}
+
 func MinifyHtml(htmlData []byte) []byte {
     htmlData = HTML_WHITESPACE_REGEX.ReplaceAll(htmlData, HTML_WHITESPACE_REPL)
     htmlData = HTML_WHITESPACE_REGEX2.ReplaceAll(htmlData, HTML_WHITESPACE_REPL2)
@@ -28,20 +37,21 @@ func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
     return true
 }
 
-func ParseIndexHtml(conf Config, tar Target) (entries []FeedEntry, ok bool) {
-    cache, err := FetchHtml(tar.URL, conf.CacheDB)
+func ParseIndexHtml(conf Config, tar Target) (indexCache HtmlCache, entries []FeedEntry, ok bool) {
+    indexCache, err := FetchHtml(tar.URL, conf.CacheDB)
     if nil != err {
         log.Printf("failed to download index web page %s", tar.URL)
         return
     }
 
-    htmlData := MinifyHtml(cache.Html)
+    htmlData := MinifyHtml(indexCache.Html)
 
     if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
         log.Printf("no match for target %s", tar.URL)
         return
     }
 
+    // extract feed entry title and link
     indexRegStr := PatternToRegex(tar.IndexPattern)
     indexReg, err := regexp.Compile(indexRegStr)
     if nil != err {
@@ -87,7 +97,7 @@ func ParseIndexHtml(conf Config, tar Target) (entries []FeedEntry, ok bool) {
 func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
     // wait some time
     if *gVerbose {
-        log.Printf("waiting for %d seconds before request content html %s", tar.ReqInterval, tar.URL)
+        log.Printf("waiting for %d seconds before sending request to %s", tar.ReqInterval, entry.Link)
     }
     time.Sleep(tar.ReqInterval * time.Second)
 
@@ -102,6 +112,7 @@ func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
         log.Printf("failed to download web page %s", entry.Link)
         return
     }
+    entry.Cache = &cache
 
     htmlData := MinifyHtml(cache.Html)
     if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
@@ -109,6 +120,7 @@ func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
         return
     }
 
+    // extract feed entry content(description)
     contentRegStr := PatternToRegex(tar.ContentPattern)
     contentReg, err := regexp.Compile(contentRegStr)
     if nil != err {

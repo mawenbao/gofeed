@@ -9,7 +9,7 @@ import(
 )
 
 // download html
-func requestHtml(cache *HtmlCache) (err error) {
+func RequestHtml(cache *HtmlCache) (err error) {
     if *gVerbose {
         log.Printf("trying to download web page %s", cache.URL)
     }
@@ -26,7 +26,7 @@ func requestHtml(cache *HtmlCache) (err error) {
         return
     }
 
-    req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0")
+    req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0")
     if "" != cache.CacheControl {
         req.Header.Set("Cache-Control", cache.CacheControl)
     }
@@ -91,7 +91,7 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
 
    if nil != err {
        // cache not found
-       cache = HtmlCache { Status: CACHE_NEW, URL: rawURL }
+       cache = HtmlCache { Status: CACHE_NEW }
    } else if "" != cache.Expires {
        var expireDate time.Time
        expireDate, err = http.ParseTime(cache.Expires)
@@ -111,10 +111,20 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
    }
 
    cache.URL = rawURL
-   err = requestHtml(&cache)
+   err = RequestHtml(&cache)
    if nil != err {
-       log.Printf("failed to download web page %s", rawURL)
+       if CACHE_NEW == cache.Status {
+           log.Printf("failed to download web page %s, just ignore it", rawURL)
+       } else {
+           log.Printf("failed to download web page %s, use cache instead", rawURL)
+       }
        return
+   }
+
+   // extract html title
+   cache.Title = ExtractHtmlTitle(cache.Html)
+   if "" == cache.Title {
+       log.Printf("failed to extract html title for %s", cache.URL)
    }
 
    switch cache.Status {
