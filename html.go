@@ -47,10 +47,13 @@ func ParseIndexHtml(conf Config, tar Target) (indexCache HtmlCache, entries []Fe
 
     htmlData := MinifyHtml(indexCache.Html)
 
+    /*
+    // temporarily removed to enable custom regular expressions in index/content patterns
     if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
         log.Printf("no match for target %s", tar.URL)
         return
     }
+    */
 
     // extract feed entry title and link
     indexRegStr := PatternToRegex(tar.IndexPattern)
@@ -81,11 +84,7 @@ func ParseIndexHtml(conf Config, tar Target) (indexCache HtmlCache, entries []Fe
             if 0 == patInd {
                 continue
             }
-            // no anonymous group
-            if "" == patName {
-                log.Printf("encountered anonymous group with pattern %s", indexRegStr)
-                return
-            } else if TITLE_NAME == patName {
+            if TITLE_NAME == patName {
                 entry.Title = string(match[patInd])
             } else if LINK_NAME == patName {
                 entry.Link = string(match[patInd])
@@ -126,10 +125,13 @@ func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
     entry.Cache = &cache
 
     htmlData := MinifyHtml(cache.Html)
+    /*
+    // temporarily removed to enable custom regular expressions in index/content patterns
     if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
         log.Printf("no match for target %s", tar.URL)
         return
     }
+    */
 
     // extract feed entry content(description)
     contentRegStr := PatternToRegex(tar.ContentPattern)
@@ -150,11 +152,7 @@ func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
         if 0 == i {
             continue
         }
-        // no anonymous group
-        if "" == patName {
-            log.Printf("encountered anonymous group in pattern %s", contentRegStr)
-            return
-        } else if CONTENT_NAME == patName {
+        if CONTENT_NAME == patName {
             entry.Content = match[i]
         }
     }

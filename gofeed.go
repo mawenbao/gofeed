@@ -67,7 +67,7 @@ func main() {
         // parse feed entry description
         for i := 0; i < len(entries); i++ {
             if !ParseContentHtml(conf, tar, &entries[i]) {
-                log.Printf("[ERROR] failed to parse content html %s", tar.URL)
+                log.Printf("[ERROR] failed to parse content html %s", entries[i].Link)
             }
         }
 

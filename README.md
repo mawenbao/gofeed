@@ -11,11 +11,13 @@ This simple program was written when I started to learn golang. So I tried to re
     *  {title}: title of feed entry, matched against the Feed.URL page
     *  {link}: hyper link of feed entry, matched against the Feed.URL page
     *  {description}: full-text description of feed entry, matched against the corresponding {link} page
+    *  custom regular expressions: *MUST NOT* contain any of the predefined patterns
 * The crawler knows well when to request new html and when to use local html cache. This will save a lot of bandwidth.
 * Several websites in one full-text feed.
  
 ## Things need to be improved
 
+*  Lacking checks for duplicate feed entries.
 *  Little documentation.
 *  No enough tests.
 *  Maybe more...
