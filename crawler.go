@@ -115,10 +115,10 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
    if nil != err {
        if CACHE_NEW == cache.Status {
            log.Printf("failed to download web page %s, just ignore it", rawURL)
+           return
        } else {
            log.Printf("failed to download web page %s, use cache instead", rawURL)
        }
-       return
    }
 
    // extract html title
