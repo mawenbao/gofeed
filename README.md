@@ -23,7 +23,8 @@ This simple program was written when I started to learn golang. So I tried to re
 ## More functions on the todo list
 
 1. <del>Cache old requests: use sqlite to cache downloaded web pages and save their lastmod time.</del>
-2. Add alternative methods to extract feed title, link and description from html
+2. Download html files for each feed target defined in the configuration in separate goroutines. 
+3. Add alternative methods to extract feed title, link and description from html
     1. xpath
 
 ## Install
