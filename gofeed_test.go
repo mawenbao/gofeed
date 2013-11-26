@@ -86,6 +86,7 @@ func TestFetchHtml(t *testing.T) {
 
     CreateDbScheme(conf.CacheDB)
 
+    // new cache
     url := "blog.atime.me/agreement.html"
     cache, err := FetchHtml(url, conf.CacheDB)
     if nil != err {
@@ -106,6 +107,12 @@ func TestFetchHtml(t *testing.T) {
         0 != bytes.Compare(cache.Html, cache2.Html) {
 
         t.Fatalf("html cache not match")
+    }
+
+    // use old cache
+    cache4, err := FetchHtml(url, conf.CacheDB)
+    if nil != err || CACHE_NOT_MODIFIED != cache4.Status {
+        t.Fatalf("failed to reuse html cache for %s: %s", url, err)
     }
 
     os.Remove(conf.CacheDB)
@@ -213,6 +220,19 @@ func TestDB(t *testing.T) {
         t.Fatalf("got wrong html cache")
     }
 
+    // update db
+    cache2.CacheControl = "ok, I know this is not true"
+    err = UpdateHtmlCache(conf.CacheDB, []HtmlCache { cache2 })
+    if nil != err {
+        t.Fatalf("failed to update db: %s", err)
+    }
+
+    cache3, err := GetHtmlCacheByURL(conf.CacheDB, cache2.URL)
+    if cache2.CacheControl != cache3.CacheControl {
+        t.Fatalf("updated CacheControl does match, %s vs %s", cache2.CacheControl, cache3.CacheControl)
+        os.Exit(1)
+    }
+
     os.Remove(conf.CacheDB)
 }
 
@@ -252,4 +272,3 @@ func TestParseIndexAndContentHtml(t *testing.T) {
 
     os.Remove(conf.CacheDB)
 }
-

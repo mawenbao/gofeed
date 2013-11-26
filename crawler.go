@@ -47,13 +47,18 @@ func requestHtml(cache *HtmlCache) (err error) {
 
     if http.StatusNotModified == resp.StatusCode {
         // not modified, use cache
-        cache.Modified = false
+        cache.Status = CACHE_NOT_MODIFIED
         if *gVerbose {
             log.Printf("%s not modified", cache.URL)
         }
         return
     } else {
-        cache.Modified = true
+        if CACHE_NEW != cache.Status {
+            cache.Status = CACHE_MODIFIED
+            if *gVerbose {
+                log.Printf("cache for %s has been modified", cache.URL)
+            }
+        }
         cache.Html, err = ioutil.ReadAll(resp.Body)
         if nil != err {
             log.Printf("failed to read response body for %s: %s", cache.URL, err)
@@ -62,12 +67,18 @@ func requestHtml(cache *HtmlCache) (err error) {
 
         if cacheCtl, ok := resp.Header["Cache-Control"]; ok {
             cache.CacheControl = cacheCtl[0]
+        } else {
+            cache.CacheControl = ""
         }
         if lastmod, ok := resp.Header["Last-Modified"]; ok {
             cache.LastModified = lastmod[0]
+        } else {
+            cache.LastModified = ""
         }
         if etag, ok := resp.Header["Etag"]; ok {
             cache.Etag = etag[0]
+        } else {
+            cache.Etag = ""
         }
     }
 
@@ -80,7 +91,7 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
 
    if nil != err {
        // cache not found
-       cache.URL = rawURL
+       cache = HtmlCache { Status: CACHE_NEW, URL: rawURL }
    } else if "" != cache.Expires {
        var expireDate time.Time
        expireDate, err = http.ParseTime(cache.Expires)
@@ -93,18 +104,26 @@ func FetchHtml(rawURL, dbPath string) (cache HtmlCache, err error) {
            cache.Etag = ""
            cache.LastModified = ""
            cache.CacheControl = ""
+           if *gVerbose {
+               log.Printf("cache for %s has expired", cache.URL)
+           }
        }
    }
 
+   cache.URL = rawURL
    err = requestHtml(&cache)
    if nil != err {
        log.Printf("failed to download web page %s", rawURL)
        return
    }
 
-   if cache.Modified {
+   switch cache.Status {
+   case CACHE_NEW:
        // save html cache
        PutHtmlCache(dbPath, []HtmlCache { cache })
+   case CACHE_MODIFIED:
+       // update html cache
+       UpdateHtmlCache(dbPath, []HtmlCache { cache })
    }
 
    return

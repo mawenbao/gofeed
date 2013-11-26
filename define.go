@@ -64,15 +64,27 @@ type FeedEntry struct {
     Content []byte
 }
 
-type HtmlCache struct {
-    URL string
-    Modified bool
+const(
+    CACHE_NOT_MODIFIED = iota
+    CACHE_NEW
+    CACHE_MODIFIED
+)
 
+type HtmlCache struct {
+    Status int // default is CACHE_NOT_MODIFIED
+
+    URL string
     CacheControl string
     LastModified string // http.TimeFormat
     Etag string
     Expires string // http.TimeFormat
-
     Html []byte
 }
 
+// query returns emtpy record set
+type DBNoRecordError struct {
+}
+
+func (nre DBNoRecordError) Error() string {
+    return "db query returned empty record set"
+}

@@ -4,10 +4,15 @@ import(
     "os"
     "fmt"
     "flag"
+    "log"
 )
 
+func init() {
+    log.SetFlags(log.Lshortfile)
+}
+
 var (
-    gVerbose = flag.Bool("v", false, "be verbose")
+    gVerbose = flag.Bool("v", true, "be verbose")
     gFulltext = flag.Bool("f", false, "generate full-text feeds")
 )
 
