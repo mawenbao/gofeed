@@ -1,6 +1,6 @@
 # gofeed
 
-Gofeed was inspired by feed43.com. It is disigned to extract feeds from websites who do not provide any. Gofeed can even parse several websites into one full-text feed. 
+Gofeed was inspired by feed43.com. It is disigned to extract feeds from websites which do not provide any. Gofeed can even parse several websites into one full-text feed. 
 
 This simple program was written when I started to learn golang. So I tried to reinvent everything I need, including a simple crawler which took good use of cache and a very simple rss2.0 feed generator.
 
