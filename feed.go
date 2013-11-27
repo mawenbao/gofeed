@@ -3,46 +3,37 @@ package main
 import(
     "encoding/xml"
     "log"
-    "time"
     "net/http"
 )
 
 func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
     item.Title = entry.Title
-    item.Link = entry.Link
+    item.Link = entry.Link.String()
     item.Description = string(entry.Content)
-    if "" == entry.Cache.LastModified {
-        item.PubDate = time.Now().Format(http.TimeFormat)
-    } else {
-        item.PubDate = entry.Cache.LastModified
-    }
-    item.Guid = entry.Link
+    item.PubDate = entry.Cache.LastModified.Format(http.TimeFormat)
+    item.Guid = entry.Link.String()
 
     return
 }
 
-func GenerateRss2Feed(indexCache HtmlCache, entries []FeedEntry) (feedStr []byte, err error) {
-    if "" == indexCache.LastModified {
-        indexCache.LastModified = time.Now().Format(http.TimeFormat)
-    }
-
-    feed := Rss2Feed { Version: FEED_VERSION }
-    feed.Channel = Rss2Channel {
-        Title: indexCache.Title,
-        Link: indexCache.URL,
+func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
+    rss2Feed := &Rss2Feed { Version: FEED_VERSION }
+    rss2Feed.Channel = Rss2Channel {
+        Title: feed.Title,
+        Link: feed.URL.String(),
         Description: "",
-        PubDate: indexCache.LastModified,
+        PubDate: feed.LastModified.Format(http.TimeFormat),
         Generator: GOFEED_NAME + " " + GOFEED_VERSION,
     }
 
-    feed.Channel.Items = make([]Rss2Item, len(entries))
-    for itemInd, entry := range entries {
-        feed.Channel.Items = append(feed.Channel.Items[:itemInd], FeedEntryToRss2Item(&entry))
+    rss2Feed.Channel.Items = make([]Rss2Item, len(feed.Entries))
+    for itemInd, entry := range feed.Entries {
+        rss2Feed.Channel.Items = append(rss2Feed.Channel.Items[:itemInd], FeedEntryToRss2Item(entry))
     }
 
-    feedStr, err = xml.MarshalIndent(&feed, "  ", "    ")
+    rss2FeedStr, err = xml.MarshalIndent(rss2Feed, "  ", "    ")
     if nil != err {
-        log.Printf("failed to marshal rss2 feed: %s", err)
+        log.Printf("[ERROR] failed to marshal rss2 feed: %s", err)
     }
 
     return

@@ -5,7 +5,6 @@ import (
     "log"
     "regexp"
     "time"
-    "net/url"
 )
 
 func ExtractHtmlTitle(htmlData []byte) string {
@@ -30,7 +29,7 @@ func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
             continue
         }
         if !strings.Contains(html, str) {
-            log.Printf("target html does not contain %s", str)
+            log.Printf("[ERROR] target html does not contain %s", str)
             return false
         }
     }
@@ -38,131 +37,109 @@ func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
     return true
 }
 
-func ParseIndexHtml(conf Config, tar Target) (indexCache HtmlCache, entries []FeedEntry, ok bool) {
-    indexCache, err := FetchHtml(tar.URL, conf.CacheDB)
-    if nil != err {
-        log.Printf("failed to download index web page %s", tar.URL)
-        return
-    }
+func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
+    feed = new(Feed)
 
-    htmlData := MinifyHtml(indexCache.Html)
+    for urlInd, tarURL := range feedTar.URLs {
+        // get cache first
+        indexCache, err := FetchHtml(tarURL, feedTar.CacheDB)
+        if nil != err {
+            log.Printf("[ERROR] failed to download index web page %s", tarURL.String())
+            // just ignore the sucker
+            continue
+        }
 
-    /*
-    // temporarily removed to enable custom regular expressions in index/content patterns
-    if !FilterHtmlWithoutPattern(htmlData, tar.IndexPattern) {
-        log.Printf("no match for target %s", tar.URL)
-        return
-    }
-    */
+        // minify html
+        htmlData := MinifyHtml(indexCache.Html)
 
-    // extract feed entry title and link
-    indexRegStr := PatternToRegex(tar.IndexPattern)
-    indexReg, err := regexp.Compile(indexRegStr)
-    if nil != err {
-        log.Printf("failed to index compile regular expression %s", indexRegStr)
-        return
-    }
-
-    matches := indexReg.FindAllSubmatch(htmlData, -1)
-    if nil == matches {
-        log.Printf("failed to match index html %s, pattern %s did not match", tar.URL, indexRegStr)
-        return
-    }
-
-    // should have checked target url when parsing json config
-    baseURL, err := url.Parse(tar.URL)
-    if nil != err {
-        log.Printf("error parsing index url %s: %s", tar.URL, err)
-        return
-    }
-
-    entries = make([]FeedEntry, len(matches))
-    for matchInd, match := range matches {
-        entry := &entries[matchInd]
-        for patInd, patName := range indexReg.SubexpNames() {
-            // skip whole match 
-            if 0 == patInd {
-                continue
-            }
-            if TITLE_NAME == patName {
-                entry.Title = string(match[patInd])
-            } else if LINK_NAME == patName {
-                entry.Link = string(match[patInd])
-                // normalize entry link which may be relative
-                var entryURL *url.URL
-                entryURL, err = baseURL.Parse(entry.Link)
-                if nil != err {
-                    log.Printf("error parsing entry link %s: %s", entry.Link, err)
-                } else {
-                    entry.Link = entryURL.String()
+        // extract feed entry title and link
+        indexReg := FindIndexReg(feedTar, tarURL)
+        if nil == indexReg {
+            log.Printf("[ERROR] cannot find index regex for %s", tarURL.String)
+            continue
+        }
+        matches := indexReg.FindAllSubmatch(htmlData, -1)
+        if nil == matches {
+            log.Printf("[ERROR] failed to match index html %s, pattern %s did not match", tarURL.String(), indexReg.String())
+            // ignore the sucker
+            continue
+        }
+        entries := make([]*FeedEntry, len(matches))
+        for matchInd, match := range matches {
+            entries[matchInd] = new(FeedEntry)
+            entry := entries[matchInd] // pointer of FeedEntry
+            for patInd, patName := range indexReg.SubexpNames() {
+                switch patName {
+                case TITLE_NAME:
+                    entry.Title = string(match[patInd])
+                case LINK_NAME:
+                    // normalize entry link which may be relative
+                    entry.Link, err = tarURL.Parse(string(match[patInd]))
+                    if nil != err {
+                        log.Printf("[ERROR] error parsing entry link %s: %s", entry.Link, err)
+                    }
                 }
             }
         }
-    }
 
-    ok = true
-    return
+        // set feed
+        feed.Entries = append(feed.Entries, entries...)
+        if 0 == urlInd {
+            // use first index page's title and url
+            feed.Title = indexCache.Title
+            feed.URL = tarURL
+            feed.LastModified = indexCache.LastModified
+        } else {
+            // use later lastmod time
+            if feed.LastModified.Before(indexCache.LastModified) {
+                feed.LastModified = indexCache.LastModified
+            }
+        }
+    }
+    return feed, true
 }
 
-func ParseContentHtml(conf Config, tar Target, entry *FeedEntry) (ok bool) {
-    // wait some time
-    if *gVerbose {
-        log.Printf("waiting for %d seconds before sending request to %s", tar.ReqInterval, entry.Link)
-    }
-    time.Sleep(tar.ReqInterval * time.Second)
+func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
+    for _, entry := range feed.Entries {
+        // wait some time
+        if *gVerbose {
+            log.Printf("waiting for %d seconds before sending request to %s", feedTar.ReqInterval, entry.Link.String())
+        }
+        time.Sleep(feedTar.ReqInterval * time.Second)
 
-    if "" == entry.Link {
-        log.Printf("url of feed entry %s is empty", entry.Title)
-        // just skip emtpy feed entry
-        return true
-    }
-
-    cache, err := FetchHtml(entry.Link, conf.CacheDB)
-    if nil != err {
-        log.Printf("failed to download web page %s", entry.Link)
-        return
-    }
-    entry.Cache = &cache
-
-    htmlData := MinifyHtml(cache.Html)
-    /*
-    // temporarily removed to enable custom regular expressions in index/content patterns
-    if !FilterHtmlWithoutPattern(htmlData, tar.ContentPattern) {
-        log.Printf("no match for target %s", tar.URL)
-        return
-    }
-    */
-
-    // extract feed entry content(description)
-    contentRegStr := PatternToRegex(tar.ContentPattern)
-    contentReg, err := regexp.Compile(contentRegStr)
-    if nil != err {
-        log.Printf("failed to compile content regular expression %s", contentRegStr)
-        return
-    }
-
-    match := contentReg.FindSubmatch(htmlData)
-    if nil == match {
-        log.Printf("failed to match content html %s, pattern %s match failed", entry.Link, contentRegStr)
-        return
-    }
-
-    for i, patName := range contentReg.SubexpNames() {
-        // skip whole match 
-        if 0 == i {
+        cache, err := FetchHtml(entry.Link, feedTar.CacheDB)
+        if nil != err {
+            log.Printf("[ERROR] failed to download web page %s", entry.Link.String())
             continue
         }
-        if CONTENT_NAME == patName {
-            entry.Content = match[i]
+        entry.Cache = &cache
+
+        htmlData := MinifyHtml(cache.Html)
+
+        // extract feed entry content(description)
+        contentReg := FindContentReg(feedTar, feed.URL)
+        if nil == contentReg {
+            log.Printf("[ERROR] failed to find content regex for %s", feed.URL.String())
+            continue
+        }
+        match := contentReg.FindSubmatch(htmlData)
+        if nil == match {
+            log.Printf("[ERROR] failed to match content html %s, pattern %s match failed", entry.Link.String(), contentReg.String())
+            // ignore this sucker
+            continue
+        }
+        for i, patName := range contentReg.SubexpNames() {
+            if CONTENT_NAME == patName {
+                entry.Content = match[i]
+            }
+        }
+
+        if 0 == len(entry.Content) {
+            // just print a warning message if content is empty
+            log.Printf("[WARN] empty content for feed entry %s", entry.Title)
         }
     }
 
-    if 0 == len(entry.Content) {
-        // just print a warning message if content is empty
-        log.Printf("empty content for feed entry %s", entry.Title)
-    }
-
-    ok = true
-    return
+    return true
 }
 

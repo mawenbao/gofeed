@@ -3,6 +3,7 @@ package main
 import(
     "strings"
     "log"
+    "regexp"
 )
 
 func PatternToRegex(pat string) string {
@@ -15,38 +16,90 @@ func PatternToRegex(pat string) string {
     return r.Replace(pat)
 }
 
-func CheckPatterns(tar *Target) bool {
+func CheckPatterns(tar *TargetConfig) bool {
     if nil == tar {
-        log.Printf("invliad target, nil")
+        log.Printf("[ERROR] invliad target, nil")
         return false
     }
 
-    // IndexPattern should contain both {title} and {link}
-    if "" == tar.IndexPattern {
-        log.Print("index pattern is empty")
+    if (len(tar.URLs) != len(tar.IndexPatterns) && 1 != len(tar.IndexPatterns)) ||
+    (len(tar.URLs) != len(tar.ContentPatterns) && 1 != len(tar.ContentPatterns)) {
+        log.Printf("error parsing index/content patterns: len(URL) != len(IndexPattern|ContentPattern) || 1 != len(IndexPattern|ContentPattern")
         return false
     }
 
-    if 1 != strings.Count(tar.IndexPattern, PATTERN_TITLE) || 1 != strings.Count(tar.IndexPattern, PATTERN_LINK) {
-        log.Printf("index pattern %s should contain 1 %s and 1 %s ", tar.IndexPattern, PATTERN_TITLE, PATTERN_LINK)
-        return false
+    for _, indexPat := range tar.IndexPatterns {
+        // IndexPattern should contain both {title} and {link}
+        if "" == indexPat {
+            log.Print("[ERROR] index pattern is empty")
+            return false
+        }
+
+        if 1 != strings.Count(indexPat, PATTERN_TITLE) || 1 != strings.Count(indexPat, PATTERN_LINK) {
+            log.Printf("[ERROR] index pattern %s should contain 1 %s and 1 %s ", indexPat, PATTERN_TITLE, PATTERN_LINK)
+            return false
+        }
     }
 
-    // ContentPattern should contain {content} and should not contain {title} nor {link}
-    if "" == tar.ContentPattern {
-        log.Print("content pattern is empty")
-        return false
-    }
+    for _, contentPat := range tar.ContentPatterns {
+        // ContentPattern should contain {content} and should not contain {title} nor {link}
+        if "" == contentPat {
+            log.Print("content pattern is empty")
+            return false
+        }
 
-    if 1 != strings.Count(tar.ContentPattern, PATTERN_CONTENT) {
-        log.Printf("content pattern %s should contain 1 %s", tar.ContentPattern, PATTERN_CONTENT)
-        return false
-    }
+        if 1 != strings.Count(contentPat, PATTERN_CONTENT) {
+            log.Printf("[ERROR] content pattern %s should contain 1 %s", contentPat, PATTERN_CONTENT)
+            return false
+        }
 
-    if strings.Contains(tar.ContentPattern, PATTERN_TITLE) || strings.Contains(tar.ContentPattern, PATTERN_LINK) {
-        log.Printf("%s should not contain %s or %s", tar.ContentPattern, PATTERN_TITLE, PATTERN_LINK)
-        return false
+        if strings.Contains(contentPat, PATTERN_TITLE) || strings.Contains(contentPat, PATTERN_LINK) {
+            log.Printf("[ERROR] %s should not contain %s or %s", contentPat, PATTERN_TITLE, PATTERN_LINK)
+            return false
+        }
     }
 
     return true
 }
+
+func CompileIndexContentPatterns(feedTar *FeedTarget, tar *TargetConfig) (err error) {
+    feedTar.IndexRegs = make([]*regexp.Regexp, len(tar.IndexPatterns))
+    feedTar.ContentRegs = make([]*regexp.Regexp, len(tar.ContentPatterns))
+
+    // index pattern
+    if 1 == len(tar.IndexPatterns) {
+        feedTar.IndexRegs[0], err = regexp.Compile(PatternToRegex(tar.IndexPatterns[0]))
+        if nil != err {
+            log.Printf("[ERROR] error compiling index pattern %s", tar.IndexPatterns[0])
+            return
+        }
+    } else {
+        for j := 0; j < len(tar.IndexPatterns); j++ {
+            feedTar.IndexRegs[j], err = regexp.Compile(PatternToRegex(tar.IndexPatterns[j]))
+            if nil != err {
+                log.Printf("[ERROR] error compiling index pattern %s", tar.IndexPatterns[j])
+                return
+            }
+        }
+    }
+
+    // content pattern
+    if 1 == len(tar.ContentPatterns) {
+        feedTar.ContentRegs[0], err = regexp.Compile(PatternToRegex(tar.ContentPatterns[0]))
+        if nil != err {
+            log.Printf("[ERROR] error compiling content pattern %s", tar.ContentPatterns[0])
+            return
+        }
+    } else {
+        for j := 0; j < len(tar.ContentPatterns); j++ {
+            feedTar.ContentRegs[j], err = regexp.Compile(PatternToRegex(tar.ContentPatterns[j]))
+            if nil != err {
+                log.Printf("[ERROR] error compiling content pattern %s", tar.ContentPatterns[j])
+                return
+            }
+        }
+    }
+
+    return
+}
+

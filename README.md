@@ -1,6 +1,6 @@
 # gofeed
 
-Gofeed was inspired by feed43.com. It is disigned to extract feeds from websites which do not provide any. Gofeed can even parse several websites into one full-text feed. 
+Gofeed was inspired by feed43.com. It is disigned to extract full-text feeds from websites which do not provide any.
 
 This simple program was written when I started to learn golang. So I tried to reinvent everything I need, including a simple crawler which took good use of cache and a very simple rss2.0 feed generator.
 
@@ -13,20 +13,19 @@ This simple program was written when I started to learn golang. So I tried to re
     *  {description}: full-text description of feed entry, matched against the corresponding {link} page
     *  custom regular expressions: *MUST NOT* contain any of the predefined patterns
 * The crawler knows well when to request new html and when to use local html cache. This will save a lot of bandwidth.
-* Several websites in one full-text feed.
  
 ## Things need to be improved
 
-*  Lacking checks for duplicate feed entries.
 *  Little documentation.
-*  No enough tests.
+*  No enough tests(use coveralls.io coverage service)
 *  Maybe more...
 
 ## More functions on the todo list
 
 1. <del>Cache old requests: use sqlite to cache downloaded web pages and save their lastmod time.</del>
 2. Download html files for each feed target defined in the configuration in separate goroutines. 
-3. Add alternative methods to extract feed title, link and description from html
+3. Add debug mode, which prints more infomation
+4. Add alternative methods to extract feed title, link and description from html
     1. xpath
 
 ## Install

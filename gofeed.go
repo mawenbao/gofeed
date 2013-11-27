@@ -5,8 +5,6 @@ import(
     "fmt"
     "flag"
     "log"
-    "time"
-    "net/http"
     "io/ioutil"
 )
 
@@ -35,77 +33,50 @@ func main() {
     }
 
     // parse json configuration first
-    conf, err := ParseJsonConfig(args[0])
-    if nil != err {
-        log.Fatalf("[ERROR] failed to parse json configuration %s", args[0])
-    }
+    feedTargets := ParseJsonConfig(args[0])
+    cacheDB := feedTargets[0].CacheDB
+
+    var err error
 
     // create cache db if not exists
     if *gVerbose {
-        log.Printf("Creating cache database %s", conf.CacheDB)
+        log.Printf("Creating cache database %s", cacheDB)
     }
 
-    if _, err = os.Stat(conf.CacheDB); nil != err && os.IsNotExist(err) {
-        err = CreateDbScheme(conf.CacheDB)
+    if _, err = os.Stat(cacheDB); nil != err && os.IsNotExist(err) {
+        err = CreateDBScheme(cacheDB)
         if nil != err {
-            log.Fatalf("[ERROR] failed to create cache database %s", conf.CacheDB)
+            log.Fatalf("[ERROR] failed to create cache database %s", cacheDB)
         }
     } else {
-        log.Printf("found cache database %s", conf.CacheDB)
+        log.Printf("found cache database %s", cacheDB)
     }
 
-    targetMap := make(map[string]*TargetGroup)
-
-    for _, tar := range conf.Targets {
+    for _, feedTar := range feedTargets {
         // parse feed entry title and link
-        indexCache, entries, ok := ParseIndexHtml(conf, tar)
+        feed, ok := ParseIndexHtml(feedTar)
         if !ok {
-            log.Printf("[ERROR] failed to parse index html %s", tar.URL)
+            log.Printf("[ERROR] failed to parse feed target %s", feedTar.FeedPath)
             continue
         }
 
         // parse feed entry description
-        for i := 0; i < len(entries); i++ {
-            if !ParseContentHtml(conf, tar, &entries[i]) {
-                log.Printf("[ERROR] failed to parse content html %s", entries[i].Link)
-            }
+        if !ParseContentHtml(feedTar, feed) {
+            log.Printf("[ERROR] failed to parse content html for feed target %s", feedTar.FeedPath)
         }
 
-        var tarGrp *TargetGroup
-        if grp, ok := targetMap[tar.FeedPath]; ok {
-            tarGrp = grp
-            // use the latest LastModified
-            tarGrp.IndexCache.LastModified, err = GetLaterTimeStr(tarGrp.IndexCache.LastModified, indexCache.LastModified)
-            if nil != err {
-                log.Printf("[ERROR] failed to get later time from %s and %s", tarGrp.IndexCache.LastModified, indexCache.LastModified)
-                // on time parse error, use current time
-                tarGrp.IndexCache.LastModified = time.Now().Format(http.TimeFormat)
-            }
-        } else {
-            tarGrp = new(TargetGroup)
-            // use the first target's index html cache
-            tarGrp.FeedPath = tar.FeedPath
-            tarGrp.IndexCache = indexCache
-            targetMap[tar.FeedPath] = tarGrp
-        }
-
-        tarGrp.Targets = append(tarGrp.Targets, tar)
-        tarGrp.Entries = append(tarGrp.Entries, entries...)
-    }
-
-    // generate rss2 feed
-    for _, grp := range targetMap {
-        feedStr, err := GenerateRss2Feed(grp.IndexCache, grp.Entries)
+        // generate rss2 feed
+        rss2FeedStr, err := GenerateRss2Feed(feed)
         if nil != err {
             log.Fatalf("[ERROR] failed to generate rss")
         }
 
         if *gVerbose {
-            log.Printf("saving feed at %s", grp.FeedPath)
+            log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
         }
-        err = ioutil.WriteFile(grp.FeedPath, feedStr, 0644)
+        err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
         if nil != err {
-            log.Fatal("[ERROR] failed to save feed at %s", grp.FeedPath)
+            log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
         }
     }
 }

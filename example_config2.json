@@ -2,16 +2,16 @@
     "CacheDB": "cache.db",
     "Targets": [
         {
-            "Feed.URL": "www.huxiu.com",
-            "Feed.IndexPattern": "<div class=\"article-box-ctt\"{any}<h[24]{any}<a href=\"{link}\"{any}>{title}</a>",
-            "Feed.ContentPattern": "<div{any}id=\"neirong_box\"{any}<table>{any}<div>{description}<!--",
-            "Feed.Path": "blog.atime.me.xml",
+            "Feed.URL": ["www.huxiu.com"],
+            "Feed.IndexPattern": ["<div class=\"article-box-ctt\"{any}<h[24]{any}<a href=\"{link}\"{any}>{title}</a>"],
+            "Feed.ContentPattern": ["<div{any}id=\"neirong_box\"{any}<table>{any}<div>{description}<!--"],
+            "Feed.Path": "huxiu.xml",
             "Request.Interval": 5
         },
         {
-            "Feed.URL": "http://www.timetimetime.net",
-            "Feed.IndexPattern": "<div class=\"left_contant_title a5\">{any}<a href=\"{link}\" title=\"{title}\"",
-            "Feed.ContentPattern": "<div class=\"neiz1 a7\">{any}</div>{description}</div>",
+            "Feed.URL": ["http://www.timetimetime.net"],
+            "Feed.IndexPattern": ["<div class=\"left_contant_title a5\">{any}<a href=\"{link}\" title=\"{title}\""],
+            "Feed.ContentPattern": ["<div class=\"neiz1 a7\">{any}</div>{description}</div>"],
             "Feed.Path": "timetimetime.xml",
             "Request.Interval": 10
         }

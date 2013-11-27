@@ -2,18 +2,11 @@
     "CacheDB": "cache.db",
     "Targets": [
         {
-            "Feed.URL": "blog.atime.me", 
-            "Feed.IndexPattern": "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>",
-            "Feed.ContentPattern": "<div class=\"clearfix visible-xs niu2-clearfix\"></div>{description}<div id=\"content-comments\">", 
+            "Feed.URL": ["http://blog.atime.me", "blog.atime.me/index2.html"],
+            "Feed.IndexPattern": ["<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>", "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>"],
+            "Feed.ContentPattern": ["<div class=\"clearfix visible-xs niu2-clearfix\"></div>{description}<div id=\"content-comments\">"],
             "Feed.Path": "blog.atime.me.xml",
             "Request.Interval": 0
-        },
-        {
-            "Feed.URL": "http://blog.atime.me/index2.html",
-            "Feed.IndexPattern": "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>",
-            "Feed.ContentPattern": "<div class=\"clearfix visible-xs niu2-clearfix\"></div>{description}<div id=\"content-comments\">",
-            "Feed.Path": "blog.atime.me.xml"
         }
-
     ]
 }

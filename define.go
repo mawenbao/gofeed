@@ -5,6 +5,7 @@ import(
     "time"
     "regexp"
     "encoding/xml"
+    "net/url"
 )
 
 const(
@@ -55,29 +56,38 @@ var(
     HTML_WHITESPACE_REPL2 = []byte("<")
 )
 
-type Target struct {
-    URL string `json:"Feed.URL"`
-    IndexPattern string `json:"Feed.IndexPattern"`
-    ContentPattern string `json:"Feed.ContentPattern"`
+type Config struct {
+    CacheDB string `json:"CacheDB"`
+    Targets []TargetConfig `json:"Targets"`
+}
+
+type TargetConfig struct {
+    URLs []string `json:"Feed.URL"`
+    IndexPatterns []string `json:"Feed.IndexPattern"`
+    ContentPatterns []string `json:"Feed.ContentPattern"`
     FeedPath string `json:"Feed.Path"`
     ReqInterval time.Duration `json:"Request.Interval"`
 }
 
-type TargetGroup struct {
+type FeedTarget struct {
+    URLs []*url.URL
+    IndexRegs []*regexp.Regexp
+    ContentRegs []*regexp.Regexp
     FeedPath string
-    IndexCache HtmlCache
-    Entries []FeedEntry
-    Targets []Target
+    ReqInterval time.Duration
+    CacheDB string
 }
 
-type Config struct {
-    CacheDB string `json:"CacheDB"`
-    Targets []Target `json:"Targets"`
+type Feed struct {
+    Title string // html title
+    URL *url.URL
+    LastModified time.Time
+    Entries []*FeedEntry
 }
 
 type FeedEntry struct {
     Title string
-    Link string
+    Link *url.URL
     Content []byte
     Cache *HtmlCache
 }
@@ -109,17 +119,18 @@ const(
     CACHE_NOT_MODIFIED = iota
     CACHE_NEW
     CACHE_MODIFIED
+    CACHE_EXPIRED
 )
 
 type HtmlCache struct {
     Status int // default is CACHE_NOT_MODIFIED
 
-    URL string // must be normalized by url.Parse
+    URL *url.URL
     Title string
     CacheControl string
-    LastModified string // http.TimeFormat
+    LastModified time.Time
     Etag string
-    Expires string // http.TimeFormat
+    Expires time.Time
     Html []byte
 }
 
