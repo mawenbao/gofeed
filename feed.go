@@ -13,8 +13,9 @@ func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
     item.Description = string(entry.Content)
     if "" == entry.Cache.LastModified {
         item.PubDate = time.Now().Format(http.TimeFormat)
+    } else {
+        item.PubDate = entry.Cache.LastModified
     }
-    item.PubDate = entry.Cache.LastModified
     item.Guid = entry.Link
 
     return
