@@ -44,6 +44,16 @@ func CreateDbScheme(dbPath string) (err error) {
         return
     }
 
+    sqlCreateIndex := fmt.Sprintf(`
+    CREATE UNIQUE INDEX IF NOT EXISTS html_cache_url_index ON %s (url);
+    `, DB_HTML_CACHE_TABLE)
+
+    _, err = db.Exec(sqlCreateIndex)
+    if nil != err {
+        log.Printf("failed to crate url index in db %s, sql is %s, error is %s", dbPath, sqlCreateIndex, err)
+        return
+    }
+
     return
 }
 

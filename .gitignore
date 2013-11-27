@@ -1,5 +1,5 @@
 *.swp
 gofeed
-cache.db
+*.db
 *.xml
 
