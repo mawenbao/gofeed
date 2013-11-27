@@ -6,6 +6,7 @@ import(
     "flag"
     "log"
     "io/ioutil"
+    "sync"
 )
 
 func init() {
@@ -52,32 +53,40 @@ func main() {
         log.Printf("found cache database %s", cacheDB)
     }
 
+    var wg sync.WaitGroup
+
     for _, feedTar := range feedTargets {
-        // parse feed entry title and link
-        feed, ok := ParseIndexHtml(feedTar)
-        if !ok {
-            log.Printf("[ERROR] failed to parse feed target %s", feedTar.FeedPath)
-            continue
-        }
+        wg.Add(1)
 
-        // parse feed entry description
-        if !ParseContentHtml(feedTar, feed) {
-            log.Printf("[ERROR] failed to parse content html for feed target %s", feedTar.FeedPath)
-        }
+        go func(feedTar *FeedTarget) {
+            defer wg.Done()
+            // parse feed entry title and link
+            feed, ok := ParseIndexHtml(feedTar)
+            if !ok {
+                log.Printf("[ERROR] failed to parse feed target %s", feedTar.FeedPath)
+            }
 
-        // generate rss2 feed
-        rss2FeedStr, err := GenerateRss2Feed(feed)
-        if nil != err {
-            log.Fatalf("[ERROR] failed to generate rss")
-        }
+            // parse feed entry description
+            if !ParseContentHtml(feedTar, feed) {
+                log.Printf("[ERROR] failed to parse content html for feed target %s", feedTar.FeedPath)
+            }
 
-        if *gVerbose {
-            log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
-        }
-        err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
-        if nil != err {
-            log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
-        }
+            // generate rss2 feed
+            rss2FeedStr, err := GenerateRss2Feed(feed)
+            if nil != err {
+                log.Fatalf("[ERROR] failed to generate rss")
+            }
+
+            if *gVerbose {
+                log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
+            }
+            err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
+            if nil != err {
+                log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
+            }
+        }(feedTar)
     }
+
+    wg.Wait()
 }
 
