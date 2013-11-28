@@ -39,13 +39,25 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 	// check target settings
 	for i := 0; i < len(conf.Targets); i++ {
 		tar := &conf.Targets[i]
-		feedTar := &FeedTarget{CacheDB: conf.CacheDB, ReqInterval: tar.ReqInterval}
+		feedTar := &FeedTarget{
+			CacheDB:     conf.CacheDB,
+			ReqInterval: tar.ReqInterval,
+			Description: tar.Description,
+		}
+
 		// abs feed path
 		tar.FeedPath, err = filepath.Abs(tar.FeedPath)
 		if nil != err {
 			log.Fatalf("error abs feed path %s", tar.FeedPath)
 		}
 		feedTar.FeedPath = tar.FeedPath
+
+		// set feed title
+		if "" != tar.Title {
+			feedTar.Title = tar.Title
+		} else {
+			feedTar.Title = filepath.Base(tar.FeedPath)
+		}
 
 		// check patterns
 		if !CheckPatterns(tar) {

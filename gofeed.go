@@ -51,9 +51,9 @@ func main() {
 		if nil != err {
 			log.Fatalf("failed to open/create logfile %s: %s", *gLogfile, err)
 		}
+		defer logfile.Close()
+		log.SetOutput(logfile)
 	}
-	defer logfile.Close()
-	log.SetOutput(logfile)
 
 	// debug mode is verbose
 	if *gDebug {

@@ -96,8 +96,9 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 		// set feed
 		feed.Entries = append(feed.Entries, entries...)
 		if 0 == urlInd {
-			// use first index page's title and url
-			feed.Title = indexCache.Title
+			feed.Title = feedTar.Title
+			feed.Description = feedTar.Description
+			// use first index page and url
 			feed.URL = tarURL
 			feed.LastModified = indexCache.LastModified
 		} else {

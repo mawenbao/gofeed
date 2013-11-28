@@ -129,12 +129,6 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache HtmlCache, err error) {
 		}
 	}
 
-	// extract html title
-	cache.Title = ExtractHtmlTitle(cache.Html)
-	if "" == cache.Title {
-		log.Printf("[ERROR] failed to extract html title for %s", cache.URL)
-	}
-
 	switch cache.Status {
 	case CACHE_NEW:
 		// save html cache

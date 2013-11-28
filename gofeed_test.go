@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseJsonConfig(t *testing.T) {
-	config_file := "example_config.json"
+	config_file := "example_config2.json"
 	feedTargets := ParseJsonConfig(config_file)
 	feedTar := feedTargets[0]
 
@@ -60,7 +60,7 @@ func TestRequestHtml(t *testing.T) {
 */
 
 func TestFetchHtml(t *testing.T) {
-	feedTargets := ParseJsonConfig("example_config.json")
+	feedTargets := ParseJsonConfig("example_config2.json")
 	cacheDB := feedTargets[0].CacheDB
 
 	os.Remove(cacheDB)
@@ -162,7 +162,7 @@ func TestMinifyHtml(t *testing.T) {
 
 /*
 func TestFilterHtmlWithoutPattern(t *testing.T) {
-    feedTargets := ParseJsonConfig("example_config.json")
+    feedTargets := ParseJsonConfig("example_config2.json")
     cache := HtmlCache { URL: tar.URL }
     err = RequestHtml(&cache)
     if nil != err {
@@ -177,7 +177,7 @@ func TestFilterHtmlWithoutPattern(t *testing.T) {
 */
 
 func TestDB(t *testing.T) {
-	feedTargets := ParseJsonConfig("example_config.json")
+	feedTargets := ParseJsonConfig("example_config2.json")
 	cacheDB := feedTargets[0].CacheDB
 
 	os.Remove(cacheDB)
@@ -232,7 +232,7 @@ func TestDB(t *testing.T) {
 }
 
 func TestGenerateRss2Feed(t *testing.T) {
-	feedTargets := ParseJsonConfig("example_config.json")
+	feedTargets := ParseJsonConfig("example_config2.json")
 	cacheDB := feedTargets[0].CacheDB
 
 	os.Remove(cacheDB)
@@ -259,7 +259,7 @@ func TestGenerateRss2Feed(t *testing.T) {
 }
 
 func TestParseIndexAndContentHtml(t *testing.T) {
-	feedTargets := ParseJsonConfig("example_config.json")
+	feedTargets := ParseJsonConfig("example_config2.json")
 	cacheDB := feedTargets[0].CacheDB
 
 	os.Remove(cacheDB)

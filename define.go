@@ -62,6 +62,8 @@ type Config struct {
 }
 
 type TargetConfig struct {
+	Title           string        `json:"Feed.Title"`
+	Description     string        `json:"Feed.Description"`
 	URLs            []string      `json:"Feed.URL"`
 	IndexPatterns   []string      `json:"Feed.IndexPattern"`
 	ContentPatterns []string      `json:"Feed.ContentPattern"`
@@ -70,6 +72,8 @@ type TargetConfig struct {
 }
 
 type FeedTarget struct {
+	Title       string
+	Description string
 	URLs        []*url.URL
 	IndexRegs   []*regexp.Regexp
 	ContentRegs []*regexp.Regexp
@@ -79,7 +83,8 @@ type FeedTarget struct {
 }
 
 type Feed struct {
-	Title        string   // html title
+	Title        string
+	Description  string
 	URL          *url.URL // URL == nil means feed is invalid
 	LastModified time.Time
 	Entries      []*FeedEntry
@@ -87,8 +92,8 @@ type Feed struct {
 
 type FeedEntry struct {
 	Title   string
-	Link    *url.URL // Link == nil means entry is invalid
-	Content []byte
+	Link    *url.URL   // Link == nil means entry is invalid
+	Content []byte     // entry description
 	Cache   *HtmlCache // Cache == nil means entry is invalid
 }
 
@@ -126,7 +131,6 @@ type HtmlCache struct {
 	Status int // default is CACHE_NOT_MODIFIED
 
 	URL          *url.URL
-	Title        string
 	CacheControl string
 	LastModified time.Time
 	Etag         string

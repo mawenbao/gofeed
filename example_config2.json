@@ -2,19 +2,12 @@
     "CacheDB": "cache.db",
     "Targets": [
         {
-            "Feed.URL": ["www.huxiu.com"],
-            "Feed.IndexPattern": ["<div class=\"article-box-ctt\"{any}<h[24]{any}<a href=\"{link}\"{any}>{title}</a>"],
-            "Feed.ContentPattern": ["<div{any}id=\"neirong_box\"{any}<table>{any}<div>{description}<!--"],
-            "Feed.Path": "huxiu.xml",
-            "Request.Interval": 5
-        },
-        {
-            "Feed.URL": ["http://www.timetimetime.net"],
-            "Feed.IndexPattern": ["<div class=\"left_contant_title a5\">{any}<a href=\"{link}\" title=\"{title}\""],
-            "Feed.ContentPattern": ["<div class=\"neiz1 a7\">{any}</div>{description}</div>"],
-            "Feed.Path": "timetimetime.xml",
-            "Request.Interval": 10
+            "Feed.Title": "mwb's blog",
+            "Feed.URL": ["http://blog.atime.me", "blog.atime.me/index2.html"],
+            "Feed.IndexPattern": ["<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>", "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>"],
+            "Feed.ContentPattern": ["<div class=\"clearfix visible-xs niu2-clearfix\"></div>{description}<div id=\"content-comments\">"],
+            "Feed.Path": "blog.atime.me.xml",
+            "Request.Interval": 0
         }
-
     ]
 }
