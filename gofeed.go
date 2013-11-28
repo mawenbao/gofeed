@@ -18,10 +18,11 @@ var (
 	gVerbose = flag.Bool("v", false, "be verbose")
 	gDebug   = flag.Bool("d", false, "debug mode")
 	gCPUNum  = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
+    gLogfile = flag.String("l", "", "path of the logfile")
 )
 
 func showUsage() {
-	fmt.Printf("Usage %s [-v][-d][-c cpu_number] json_config_file\n\n", os.Args[0])
+	fmt.Printf("Usage %s [-v][-d][-c cpu_number][-l log_file] json_config_file\n\n", os.Args[0])
 	fmt.Printf("Flags:\n")
 	flag.PrintDefaults()
 }
@@ -42,6 +43,18 @@ func main() {
 		*gCPUNum = runtime.NumCPU()
 	}
 
+    var logfile *os.File
+	var err error
+
+    if "" != *gLogfile {
+        logfile, err = os.OpenFile(*gLogfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+        if nil != err {
+            log.Fatalf("failed to open/create logfile %s: %s", *gLogfile, err)
+        }
+    }
+    defer logfile.Close()
+    log.SetOutput(logfile)
+
 	// debug mode is verbose
 	if *gDebug {
 		*gVerbose = true
@@ -50,8 +63,6 @@ func main() {
 	// parse json configuration first
 	feedTargets := ParseJsonConfig(args[0])
 	cacheDB := feedTargets[0].CacheDB
-
-	var err error
 
 	// create cache db if not exists
 	if _, err = os.Stat(cacheDB); nil != err && os.IsNotExist(err) {
