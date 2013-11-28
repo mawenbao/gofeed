@@ -60,7 +60,7 @@ And you should note that
     Usage ./gofeed [-v][-d][-c cpu_number] json_config_file
 
     Flags:
-    -c=2: number of cpus used to run simultaneously
+    -c=2: number of cpus to run simultaneously
     -v=false: be verbose
     -d=false: debug mode
 

@@ -17,7 +17,7 @@ func init() {
 var (
     gVerbose = flag.Bool("v", false, "be verbose")
     gDebug = flag.Bool("d", false, "debug mode")
-    gCPUNum = flag.Int("c", runtime.NumCPU(), "number of cpus used to run simultaneously")
+    gCPUNum = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
 )
 
 func showUsage() {
