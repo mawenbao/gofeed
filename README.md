@@ -1,6 +1,6 @@
 # gofeed
 
-Gofeed was inspired by feed43.com. It is disigned to extract full-text feeds from websites which only provide partial feeds or no feeds at all.
+Gofeed was inspired by feed43.com. It is disigned to extract full-text feeds from websites which only provide partial feeds or provide no feeds at all.
 
 This simple program was written when I started to learn golang. So I tried to reinvent everything I need, including a simple crawler which took good use of cache and a very simple rss2.0 feed generator.
 
@@ -50,7 +50,7 @@ See `example_config.json` and `example_config2.json`.
 
 And you should note that
 
-1. There should be as many Feed.URL as Feed.IndexPattern. If array length of the two does not match, there should be only one Feed.IndexPattern, which means all the Feed.URL will use the same Feed.IndexPattern. Otherwise, an configuration parse error will return. 
+1. There should be as many Feed.URL as Feed.IndexPattern. If array length of the two does not match, there should be only one Feed.IndexPattern, which means all the Feed.URL will share the same Feed.IndexPattern. Otherwise, an configuration parse error will return. 
 
     And the same goes for Feed.ContentPattern.
 
