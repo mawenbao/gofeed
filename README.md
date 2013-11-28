@@ -30,11 +30,11 @@ This simple program was written when I started to learn golang. So I tried to re
 
 ## Install
 
-Firstly, you should install the sqlite driver `go-sqlite3`.
+Firstly, make sure you have set the `GOPATH` environment variable properly. Then, you should install the sqlite driver `go-sqlite3`.
 
     go get github.com/mattn/go-sqlite3
 
-Then install gofeed.
+Now install gofeed.
 
     go get github.com/mawenbao/gofeed
 
