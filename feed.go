@@ -39,13 +39,17 @@ func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
 	}
 
 	rss2Feed.Channel.Items = make([]Rss2Item, len(feed.Entries))
-	for itemInd, entry := range feed.Entries {
+	itemInd := 0
+	for entryInd, entry := range feed.Entries {
 		if nil == entry {
-			log.Println("[ERROR] got nil entry at index %d", itemInd)
+			log.Println("[ERROR] got nil entry at index %d", entryInd)
 		} else if nil == entry.Link || nil == entry.Cache {
-			log.Printf("[WARN] Ignore invalid feed entry %s: link or cache is nil")
+			log.Println("[WARN] Ignore invalid feed entry: link or cache is nil")
+		} else if 0 == len(entry.Content) && !*gKeepEmptyEntry {
+			log.Printf("Ignore empty feed entry %s", entry.Link.String())
 		} else {
 			rss2Feed.Channel.Items = append(rss2Feed.Channel.Items[:itemInd], FeedEntryToRss2Item(entry))
+			itemInd += 1
 		}
 	}
 

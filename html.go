@@ -161,7 +161,7 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 
 		if 0 == len(entry.Content) {
 			// just print a warning message if content is empty
-			log.Printf("[WARN] feed entry has no content: %s", entry.Link.String())
+			log.Printf("[WARN] feed entry has no description: %s", entry.Link.String())
 		}
 	}
 

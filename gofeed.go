@@ -15,10 +15,11 @@ func init() {
 }
 
 var (
-	gVerbose = flag.Bool("v", false, "be verbose")
-	gDebug   = flag.Bool("d", false, "debug mode")
-	gCPUNum  = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
-	gLogfile = flag.String("l", "", "path of the log file")
+	gVerbose        = flag.Bool("v", false, "be verbose")
+	gDebug          = flag.Bool("d", false, "debug mode")
+	gCPUNum         = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
+	gLogfile        = flag.String("l", "", "path of the log file")
+	gKeepEmptyEntry = flag.Bool("k", false, "keep feed entries which do not have any description")
 )
 
 func showUsage() {

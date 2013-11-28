@@ -63,7 +63,7 @@ You can use the following predefined patterns in `Feed.IndexPattern` and `Feed.C
 *  {description}: full-text description of feed entry, matched against the corresponding {link} page
 
 ### Custom regular expressions
-You can also write custom regex in `Feed.IndexPattern` and `Feed.ContentPattern`. Make sure there is no predefined patterns in your custom regular expressions. The regex syntax documentation can be found [here](https://code.google.com/p/re2/wiki/Syntax).
+You can also write custom regex in `Feed.IndexPattern` and `Feed.ContentPattern`. Make sure there are no predefined patterns in your custom regular expressions. The regex syntax documentation can be found [here](https://code.google.com/p/re2/wiki/Syntax).
 
 The custom regular expressions have not been tested properly. So I suggest just using the predefined patterns.
 
@@ -76,11 +76,13 @@ The custom regular expressions have not been tested properly. So I suggest just 
     -v=false: be verbose
     -d=false: debug mode
     -l="": path of the log file
+    -k=false: keep feed entries which do not have any description
 
 *  -c: number of cpus, default value is the actual number of your machine's cpus.
 *  -v: print more infomation.
 *  -d: print even more information than `-v` option, should be useful when debugging your index or content patterns.
 *  -l: append output in a log file
+*  -k: do not strip feed entries whose description are empty
 
 ## License
 
