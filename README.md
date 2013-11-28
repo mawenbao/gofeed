@@ -63,10 +63,12 @@ And you should note that
     -c=2: number of cpus to run simultaneously
     -v=false: be verbose
     -d=false: debug mode
+    -l="": path of the log file
 
 *  -c: number of cpus, default value is the actual number of your machine's cpus.
 *  -v: print more infomation.
 *  -d: print even more information than `-v` option, should be useful when debugging your index or content patterns.
+*  -l: append output in a log file
 
 ## License
 
