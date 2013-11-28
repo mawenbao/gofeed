@@ -1,5 +1,6 @@
 *.swp
 gofeed
 *.db
+*.db-journal
 *.xml
 
