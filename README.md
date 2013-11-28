@@ -43,7 +43,7 @@ Then install gofeed.
 See `example_config.json` and `example_config2.json`.
 
 *  CacheDB: (string) path of html cache database(sqlite3), can be absolute or be relative to the current directory.
-*  Targets: array of feed targets, and each of them run in a separate goroutine
+*  Targets: array of feed targets, each of which runs in a separate goroutine
     *  Request.Interval: (integer) time to wait before sending a http request to the target.
     *  Feed.URL: (array of strings) array of urls, used to define urls of the target's index pages.
     *  Feed.IndexPattern: (array of strings) array of index patterns, used to extract entry link and entry title from the index page.
@@ -51,7 +51,9 @@ See `example_config.json` and `example_config2.json`.
 
 And you should note that
 
-1. There should be as many Feed.URL as Feed.IndexPattern. If array length of the two does not match, there should be only one Feed.IndexPattern, which means all the Feed.URL will use the same Feed.IndexPattern. Otherwise, an configuration parse error will return. And the same goes for Feed.ContentPattern.
+1. There should be as many Feed.URL as Feed.IndexPattern. If array length of the two does not match, there should be only one Feed.IndexPattern, which means all the Feed.URL will use the same Feed.IndexPattern. Otherwise, an configuration parse error will return. 
+
+    And the same goes for Feed.ContentPattern.
 
 ## Command line options
 
