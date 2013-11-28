@@ -71,6 +71,7 @@ func main() {
 
 		go func(feedTar *FeedTarget) {
 			defer wg.Done()
+            log.Printf("start processing target %s", feedTar.FeedPath)
 			// parse feed entry title and link
 			feed, ok := ParseIndexHtml(feedTar)
 			if !ok {
@@ -91,9 +92,7 @@ func main() {
 				if nil != err {
 					log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
 				}
-				if *gVerbose {
-					log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
-				}
+                log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
 			}
 		}(feedTar)
 	}
