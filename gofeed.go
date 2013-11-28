@@ -54,11 +54,8 @@ func main() {
 	var err error
 
 	// create cache db if not exists
-	if *gVerbose {
-		log.Printf("creating cache database %s", cacheDB)
-	}
-
 	if _, err = os.Stat(cacheDB); nil != err && os.IsNotExist(err) {
+		log.Printf("creating cache database %s", cacheDB)
 		err = CreateDBScheme(cacheDB)
 		if nil != err {
 			log.Fatalf("[ERROR] failed to create cache database %s", cacheDB)
