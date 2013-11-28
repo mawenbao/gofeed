@@ -30,6 +30,12 @@ func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
         }
         if !strings.Contains(html, str) {
             log.Printf("[ERROR] target html does not contain %s", str)
+            if *gDebug {
+                log.Println("======= debug: target html data =======")
+                log.Println(string(htmlData))
+                log.Println("==============")
+            }
+
             return false
         }
     }
@@ -45,7 +51,7 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
         indexCache, err := FetchHtml(tarURL, feedTar.CacheDB)
         if nil != err {
             log.Printf("[ERROR] failed to download index web page %s", tarURL.String())
-            // just ignore the sucker
+            // just ignore the sucker, feed.URL = nil
             continue
         }
 
@@ -61,7 +67,12 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
         matches := indexReg.FindAllSubmatch(htmlData, -1)
         if nil == matches {
             log.Printf("[ERROR] failed to match index html %s, pattern %s did not match", tarURL.String(), indexReg.String())
-            // ignore the sucker
+            if *gDebug {
+                log.Println("======= debug: target html data =======")
+                log.Println(string(htmlData))
+                log.Println("==============")
+            }
+            // ignore this
             continue
         }
         entries := make([]*FeedEntry, len(matches))
@@ -100,7 +111,19 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 }
 
 func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
-    for _, entry := range feed.Entries {
+    contentReg := FindContentReg(feedTar, feed.URL)
+    if nil == contentReg {
+        log.Printf("[ERROR] failed to find content regex for %s", feed.URL.String())
+        return
+    }
+
+    for entryInd, entry := range feed.Entries {
+        // check entry link
+        if nil == entry.Link {
+            log.Printf("[ERROR] entry link is nil, ignore this. entry index is %d", entryInd)
+            continue
+        }
+
         // wait some time
         if *gVerbose {
             log.Printf("waiting for %d seconds before sending request to %s", feedTar.ReqInterval, entry.Link.String())
@@ -110,6 +133,7 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
         cache, err := FetchHtml(entry.Link, feedTar.CacheDB)
         if nil != err {
             log.Printf("[ERROR] failed to download web page %s", entry.Link.String())
+            // ignore this entry, entry.Cache = nil
             continue
         }
         entry.Cache = &cache
@@ -117,14 +141,14 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
         htmlData := MinifyHtml(cache.Html)
 
         // extract feed entry content(description)
-        contentReg := FindContentReg(feedTar, feed.URL)
-        if nil == contentReg {
-            log.Printf("[ERROR] failed to find content regex for %s", feed.URL.String())
-            continue
-        }
         match := contentReg.FindSubmatch(htmlData)
         if nil == match {
             log.Printf("[ERROR] failed to match content html %s, pattern %s match failed", entry.Link.String(), contentReg.String())
+            if *gDebug {
+                log.Println("======= debug: target html data =======")
+                log.Println(string(htmlData))
+                log.Println("==============")
+            }
             // ignore this sucker
             continue
         }
@@ -136,7 +160,7 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 
         if 0 == len(entry.Content) {
             // just print a warning message if content is empty
-            log.Printf("[WARN] empty content for feed entry %s", entry.Title)
+            log.Printf("[WARN] feed entry has no content: %s", entry.Link.String())
         }
     }
 

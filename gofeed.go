@@ -7,6 +7,7 @@ import(
     "log"
     "io/ioutil"
     "sync"
+    "runtime"
 )
 
 func init() {
@@ -15,10 +16,12 @@ func init() {
 
 var (
     gVerbose = flag.Bool("v", false, "be verbose")
+    gDebug = flag.Bool("d", false, "debug mode")
+    gCPUNum = flag.Int("c", runtime.NumCPU(), "number of cpus used to run simultaneously")
 )
 
 func showUsage() {
-    fmt.Printf("Usage %s [-v] json_config_file\n\n", os.Args[0])
+    fmt.Printf("Usage %s [-v][-d][-c cpu_number] json_config_file\n\n", os.Args[0])
     fmt.Printf("Flags:\n")
     flag.PrintDefaults()
 }
@@ -33,6 +36,17 @@ func main() {
         return
     }
 
+    // check flag values
+    if *gCPUNum > runtime.NumCPU() {
+        log.Printf("[WARN] cpu number %d too big, wil be set to actual number of your cpus: %d", *gCPUNum, runtime.NumCPU())
+        *gCPUNum = runtime.NumCPU()
+    }
+
+    // debug mode is verbose
+    if *gDebug {
+        *gVerbose = true
+    }
+
     // parse json configuration first
     feedTargets := ParseJsonConfig(args[0])
     cacheDB := feedTargets[0].CacheDB
@@ -41,7 +55,7 @@ func main() {
 
     // create cache db if not exists
     if *gVerbose {
-        log.Printf("Creating cache database %s", cacheDB)
+        log.Printf("creating cache database %s", cacheDB)
     }
 
     if _, err = os.Stat(cacheDB); nil != err && os.IsNotExist(err) {
@@ -74,15 +88,15 @@ func main() {
             // generate rss2 feed
             rss2FeedStr, err := GenerateRss2Feed(feed)
             if nil != err {
-                log.Fatalf("[ERROR] failed to generate rss")
-            }
-
-            if *gVerbose {
-                log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
-            }
-            err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
-            if nil != err {
-                log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
+                log.Printf("[ERROR] failed to generate rss %s", feedTar.FeedPath)
+            } else {
+                err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
+                if nil != err {
+                    log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
+                }
+                if *gVerbose {
+                    log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
+                }
             }
         }(feedTar)
     }

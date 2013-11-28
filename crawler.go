@@ -11,7 +11,7 @@ import(
 // download html
 func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
     if *gVerbose {
-        log.Printf("trying to download web page %s", cache.URL)
+        log.Printf("start to request %s", cache.URL)
     }
 
     req, err := http.NewRequest("GET", cache.URL.String(), nil)
@@ -50,7 +50,7 @@ func ParseHttpResponse(resp *http.Response, cache *HtmlCache) (err error) {
         // not modified, use cache
         cache.Status = CACHE_NOT_MODIFIED
         if *gVerbose {
-            log.Printf("cache of %s not modified", cache.URL.String())
+            log.Printf("cache for %s not modified", cache.URL.String())
         }
         return
     } else {
@@ -58,7 +58,7 @@ func ParseHttpResponse(resp *http.Response, cache *HtmlCache) (err error) {
         if CACHE_NEW != cache.Status {
             cache.Status = CACHE_MODIFIED
             if *gVerbose {
-                log.Printf("cache of %s has been modified", cache.URL.String())
+                log.Printf("cache for %s has been modified", cache.URL.String())
             }
         }
         cache.Html, err = ioutil.ReadAll(resp.Body)
@@ -106,7 +106,7 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache HtmlCache, err error) {
             // cache has expired
             cache.Status = CACHE_EXPIRED
             if *gVerbose {
-                log.Printf("cache of %s has expired", cache.URL.String())
+                log.Printf("cache for %s has expired", cache.URL.String())
             }
         }
     }
@@ -115,6 +115,8 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache HtmlCache, err error) {
     resp, err := SendHttpRequest(&cache)
     if nil != err {
         log.Printf("[ERROR] failed sending http request to %s: %s", cache.URL.String(), err)
+        // stop
+        return
     }
 
     err = ParseHttpResponse(resp, &cache)

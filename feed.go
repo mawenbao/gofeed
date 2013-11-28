@@ -3,10 +3,16 @@ package main
 import(
     "encoding/xml"
     "log"
+    "errors"
     "net/http"
 )
 
 func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
+    if nil == entry || nil == entry.Link || nil == entry.Cache {
+        log.Println("[ERROR] got invalid entry: entry is nil or entry.Link is nil or entry.Cache is nil")
+        return
+    }
+
     item.Title = entry.Title
     item.Link = entry.Link.String()
     item.Description = string(entry.Content)
@@ -17,6 +23,12 @@ func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
 }
 
 func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
+    if nil == feed || nil == feed.URL {
+        log.Println("[ERROR] Got empty feed, wll ignore it")
+        err = errors.New("Empty feed")
+        return
+    }
+
     rss2Feed := &Rss2Feed { Version: FEED_VERSION }
     rss2Feed.Channel = Rss2Channel {
         Title: feed.Title,
@@ -28,7 +40,13 @@ func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
 
     rss2Feed.Channel.Items = make([]Rss2Item, len(feed.Entries))
     for itemInd, entry := range feed.Entries {
-        rss2Feed.Channel.Items = append(rss2Feed.Channel.Items[:itemInd], FeedEntryToRss2Item(entry))
+        if nil == entry {
+            log.Println("[ERROR] got nil entry at index %d", itemInd)
+        } else if nil == entry.Link || nil == entry.Cache {
+            log.Printf("[WARN] Ignore invalid feed entry %s: link or cache is nil")
+        } else {
+            rss2Feed.Channel.Items = append(rss2Feed.Channel.Items[:itemInd], FeedEntryToRss2Item(entry))
+        }
     }
 
     rss2FeedStr, err = xml.MarshalIndent(rss2Feed, "  ", "    ")

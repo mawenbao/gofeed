@@ -80,16 +80,16 @@ type FeedTarget struct {
 
 type Feed struct {
     Title string // html title
-    URL *url.URL
+    URL *url.URL // URL == nil means feed is invalid
     LastModified time.Time
     Entries []*FeedEntry
 }
 
 type FeedEntry struct {
     Title string
-    Link *url.URL
+    Link *url.URL // Link == nil means entry is invalid
     Content []byte
-    Cache *HtmlCache
+    Cache *HtmlCache // Cache == nil means entry is invalid
 }
 
 type Rss2Feed struct {
