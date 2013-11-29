@@ -113,8 +113,10 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
         if 0 != *gGzipCompressLevel {
             buff := bytes.NewBuffer(c.Html)
             gzipR, err := gzip.NewReader(buff)
-            if nil != err && *gDebug {
-                log.Printf("[WARN] failed to decompress html data: %s", err)
+            if nil != err {
+                if *gDebug {
+                    log.Printf("[WARN] failed to decompress html data: %s", err)
+                }
             } else {
                 c.Html, err = ioutil.ReadAll(gzipR)
             }
