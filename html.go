@@ -49,7 +49,7 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 	for urlInd, tarURL := range feedTar.URLs {
 		// get cache first
 		indexCache, err := FetchHtml(tarURL, feedTar.CacheDB)
-		if nil != err {
+		if nil == indexCache || nil != err {
 			log.Printf("[ERROR] failed to download index web page %s", tarURL.String())
 			// just ignore the sucker, feed.URL = nil
 			continue
@@ -100,10 +100,15 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 			feed.Description = feedTar.Description
 			// use first index page and url
 			feed.URL = tarURL
-			feed.LastModified = indexCache.LastModified
+            dateNow := time.Now()
+            if nil == indexCache.LastModified {
+                feed.LastModified = &dateNow
+            } else {
+                feed.LastModified = indexCache.LastModified
+            }
 		} else {
 			// use later lastmod time
-			if feed.LastModified.Before(indexCache.LastModified) {
+			if nil != indexCache.LastModified && feed.LastModified.Before(*indexCache.LastModified) {
 				feed.LastModified = indexCache.LastModified
 			}
 		}
@@ -132,12 +137,12 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 		time.Sleep(feedTar.ReqInterval * time.Second)
 
 		cache, err := FetchHtml(entry.Link, feedTar.CacheDB)
-		if nil != err {
+		if nil == cache || nil != err {
 			log.Printf("[ERROR] failed to download web page %s", entry.Link.String())
 			// ignore this entry, entry.Cache = nil
 			continue
 		}
-		entry.Cache = &cache
+		entry.Cache = cache
 
 		htmlData := MinifyHtml(cache.Html)
 

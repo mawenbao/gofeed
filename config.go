@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+    "os"
 	"log"
 	"net/url"
 	"path/filepath"
@@ -50,42 +51,64 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 		if nil != err {
 			log.Fatalf("error abs feed path %s", tar.FeedPath)
 		}
-		feedTar.FeedPath = tar.FeedPath
+        // check feed existense
+        if feedFile, err := os.Stat(tar.FeedPath); nil == err {
+           if feedFile.IsDir() {
+               log.Fatalf("config error, feed path is a directory %s", tar.FeedPath)
+           } else {
+               log.Printf("[WARN] feed %s already exists, will overwrite it", tar.FeedPath)
+           }
+       }
+       // check parent folder existense
+       absParentDir := filepath.Dir(tar.FeedPath)
+       feedParentDir, err := os.Stat(absParentDir)
+       if nil == err && !feedParentDir.IsDir() {
+           log.Fatalf("parent directory of feed %s is actually a FILE %s", tar.FeedPath, absParentDir)
+       }
+       if nil != err {
+           log.Printf("parent directory %s of feed %s does not exist, will create it", absParentDir, tar.FeedPath)
+           err = os.MkdirAll(absParentDir, 0755)
+           if nil != err {
+               log.Fatalf("failed to create directory %s for feed %s", absParentDir, tar.FeedPath)
+           }
+       }
 
-		// set feed title
-		if "" != tar.Title {
-			feedTar.Title = tar.Title
-		} else {
-			feedTar.Title = filepath.Base(tar.FeedPath)
-		}
+       feedTar.FeedPath = tar.FeedPath
 
-		// check patterns
-		if !CheckPatterns(tar) {
-			log.Fatal("error parsing configuration: empty index/content pattern")
-		}
+       // set feed title
+       if "" != tar.Title {
+           feedTar.Title = tar.Title
+       } else {
+           feedTar.Title = filepath.Base(tar.FeedPath)
+       }
 
-		// compile patterns
-		err = CompileIndexContentPatterns(feedTar, tar)
-		if nil != err {
-			log.Fatalf("failed to compile index/content patterns for feed target %s: %s", feedTar.FeedPath, err)
-		}
+       // check patterns
+       if !CheckPatterns(tar) {
+           log.Fatal("error parsing configuration: empty index/content pattern")
+       }
 
-		// normalize url
-		if 0 == len(tar.URLs) {
-			log.Fatalf("no urls for %s", tar.FeedPath)
-		}
-		feedTar.URLs = make([]*url.URL, len(tar.URLs))
-		for urlInd, rawURL := range tar.URLs {
-			normalURL, err := url.Parse(NormalizeURLStr(rawURL))
-			if nil != err {
-				log.Fatalf("error parsing target url %s: %s", rawURL, err)
-			}
-			feedTar.URLs[urlInd] = normalURL
-		}
+       // compile patterns
+       err = CompileIndexContentPatterns(feedTar, tar)
+       if nil != err {
+           log.Fatalf("failed to compile index/content patterns for feed target %s: %s", feedTar.FeedPath, err)
+       }
 
-		// add feed target
-		feedTargets = append(feedTargets[:i], feedTar)
-	}
+       // normalize url
+       if 0 == len(tar.URLs) {
+           log.Fatalf("no urls for %s", tar.FeedPath)
+       }
+       feedTar.URLs = make([]*url.URL, len(tar.URLs))
+       for urlInd, rawURL := range tar.URLs {
+           normalURL, err := url.Parse(NormalizeURLStr(rawURL))
+           if nil != err {
+               log.Fatalf("error parsing target url %s: %s", rawURL, err)
+           }
+           feedTar.URLs[urlInd] = normalURL
+       }
 
-	return
+       // add feed target
+       feedTargets = append(feedTargets[:i], feedTar)
+   }
+
+   return
 }

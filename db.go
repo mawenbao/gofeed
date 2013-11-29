@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+    "time"
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
@@ -34,8 +35,9 @@ func CreateDBScheme(dbPath string) (err error) {
     CREATE TABLE %s (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         url TEXT NOT NULL UNIQUE,
+        date TEXT NOT NULL,
         cache_control TEXT,
-        lastmod TEXT NOT NULL,
+        lastmod TEXT,
         etag TEXT,
         expires TEXT,
         html BLOB
@@ -61,7 +63,7 @@ func CreateDBScheme(dbPath string) (err error) {
 	return
 }
 
-func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interface{}) (caches []HtmlCache, err error) {
+func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interface{}) (caches []*HtmlCache, err error) {
 	_, err = os.Stat(dbPath)
 	if nil != err {
 		// db file not exists
@@ -91,14 +93,15 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
 	defer rows.Close()
 
 	if expectSize > 0 {
-		caches = make([]HtmlCache, expectSize)
+		caches = make([]*HtmlCache, expectSize)
 	}
 	rowInd := 0
 	for rows.Next() {
-		var c HtmlCache
-		var urlStr, lastmod, expires string
+        c := new(HtmlCache)
+		var urlStr, lastmod, expires, dateStr string
 		err = rows.Scan(
 			&urlStr,
+            &dateStr,
 			&c.CacheControl,
 			&lastmod,
 			&c.Etag,
@@ -115,21 +118,34 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
             gzipR, err := gzip.NewReader(buff)
             if nil != err {
                 if *gDebug {
-                    log.Printf("[WARN] failed to decompress html data: %s", err)
+                    log.Printf("[WARN] failed to decompress html data for %s: %s", urlStr, err)
                 }
             } else {
                 c.Html, err = ioutil.ReadAll(gzipR)
             }
         }
+
 		if c.URL, err = url.Parse(urlStr); nil != err {
 			log.Printf("[ERROR] failed to parse url from rawurl string %s: %s", urlStr, err)
 		}
-		if c.LastModified, err = http.ParseTime(lastmod); nil != err {
-			log.Printf("[ERROR] failed to parse lastmod time string %s: %s", lastmod, err)
+		if "" != lastmod {
+            c.LastModified = new(time.Time)
+            if *c.LastModified, err = http.ParseTime(lastmod); nil != err {
+                log.Printf("[ERROR] failed to parse lastmod time string %s: %s", lastmod, err)
+            }
 		}
-		if c.Expires, err = http.ParseTime(expires); nil != err {
-			log.Printf("[ERROR] failed to parse expires time string %s: %s", expires, err)
+		if "" != expires {
+            c.Expires = new(time.Time)
+            if *c.Expires, err = http.ParseTime(expires); nil != err {
+                log.Printf("[ERROR] failed to parse expires time string %s: %s", expires, err)
+            }
 		}
+        if "" != dateStr {
+            c.Date = new(time.Time)
+            if *c.Date, err = http.ParseTime(dateStr); nil != err {
+                log.Printf("[ERROR] failed to parse cache date %s: %s", dateStr, err)
+            }
+        }
 
 		caches = append(caches[:rowInd], c)
 		rowInd += 1
@@ -144,7 +160,7 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
 	return
 }
 
-func ExecInsertUpdateSQL(caches []HtmlCache, dbPath string, sqlStr string) (err error) {
+func ExecInsertUpdateSQL(caches []*HtmlCache, dbPath string, sqlStr string) (err error) {
 	_, err = os.Stat(dbPath)
 	if nil != err {
 		// db file not exists
@@ -174,6 +190,15 @@ func ExecInsertUpdateSQL(caches []HtmlCache, dbPath string, sqlStr string) (err 
 
 	urls := ""
 	for _, c := range caches {
+        if nil == c {
+            log.Printf("[ERROR] cache is nil, ignore this one")
+            continue
+        }
+        if nil == c.Date {
+            log.Printf("[ERROR] cache date is nil, will not save this sucker in cache db")
+            continue
+        }
+
         var htmlBuff bytes.Buffer
         compressed := false
 
@@ -192,18 +217,19 @@ func ExecInsertUpdateSQL(caches []HtmlCache, dbPath string, sqlStr string) (err 
             gzipW.Close()
             compressed = true
         }
-
         htmlData := c.Html
         if compressed {
             htmlData = htmlBuff.Bytes()
         }
-		_, err = statmt.Exec(
-			c.URL.String(),
-			c.CacheControl,
-			c.LastModified.Format(http.TimeFormat),
-			c.Etag,
-			c.Expires.Format(http.TimeFormat),
-			htmlData)
+
+        var lastmod, expires string
+        if nil != c.LastModified {
+            lastmod = c.LastModified.Format(http.TimeFormat)
+        }
+        if nil != c.Expires {
+            expires = c.Expires.Format(http.TimeFormat)
+        }
+		_, err = statmt.Exec(c.URL.String(), c.Date.Format(http.TimeFormat), c.CacheControl, lastmod, c.Etag, expires, htmlData)
 		urls += c.URL.String() + " "
 		if nil != err {
 			log.Printf("[ERROR] failed to exec insert/update sql %s: %s", sqlStr, err)
@@ -220,11 +246,11 @@ func ExecInsertUpdateSQL(caches []HtmlCache, dbPath string, sqlStr string) (err 
 	return
 }
 
-func GetHtmlCacheByURL(dbPath, urlStr string) (cache HtmlCache, err error) {
+func GetHtmlCacheByURL(dbPath, urlStr string) (cache *HtmlCache, err error) {
 	htmlCacheSlice, err := ExecQuerySQL(
 		dbPath,
 		1,
-		fmt.Sprintf("SELECT url, cache_control, lastmod, etag, expires, html FROM %s WHERE url = ?", DB_HTML_CACHE_TABLE),
+		fmt.Sprintf("SELECT url, date, cache_control, lastmod, etag, expires, html FROM %s WHERE url = ?", DB_HTML_CACHE_TABLE),
 		urlStr)
 
 	if nil != err {
@@ -236,14 +262,15 @@ func GetHtmlCacheByURL(dbPath, urlStr string) (cache HtmlCache, err error) {
 		default:
 			log.Printf("[ERROR] failed to get cache from db %s by url %s: %s", dbPath, urlStr, err)
 		}
+        return nil, err
 	}
 
 	return htmlCacheSlice[0], err
 }
 
-func PutHtmlCache(dbPath string, caches []HtmlCache) (err error) {
+func PutHtmlCache(dbPath string, caches []*HtmlCache) (err error) {
 	sqlInsertHtml := fmt.Sprintf(`
-    INSERT INTO %s (url, cache_control, lastmod, etag, expires, html) VALUES (?, ?, ?, ?, ?, ?);
+    INSERT INTO %s (url, date, cache_control, lastmod, etag, expires, html) VALUES (?, ?, ?, ?, ?, ?, ?);
     `, DB_HTML_CACHE_TABLE)
 
 	err = ExecInsertUpdateSQL(caches, dbPath, sqlInsertHtml)
@@ -260,11 +287,11 @@ func PutHtmlCache(dbPath string, caches []HtmlCache) (err error) {
 	return
 }
 
-func UpdateHtmlCache(dbPath string, caches []HtmlCache) (err error) {
+func UpdateHtmlCache(dbPath string, caches []*HtmlCache) (err error) {
 	sqlUpdateHtml := ""
 	for _, c := range caches {
 		sqlUpdateHtml += fmt.Sprintf(`
-        UPDATE %s SET url = ?, cache_control = ?, lastmod = ?, etag = ?, expires = ?, html = ? WHERE url = '%s';
+        UPDATE %s SET url = ?, date = ?, cache_control = ?, lastmod = ?, etag = ?, expires = ?, html = ? WHERE url = '%s';
         `, DB_HTML_CACHE_TABLE, c.URL.String())
 	}
 	err = ExecInsertUpdateSQL(caches, dbPath, sqlUpdateHtml)

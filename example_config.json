@@ -1,20 +1,20 @@
 {
-    "CacheDB": "/tmp/gofeed-cache.db",
+    "CacheDB": "cache.db",
     "Targets": [
         {
             "Feed.Title": "虎嗅全文",
             "Feed.URL": ["http://www.huxiu.com/rss/0.xml"],
             "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>"],
             "Feed.ContentPattern": ["<div{any}id=\"neirong_box\"{any}<table>{any}<div>{description}<!--"],
-            "Feed.Path": "/home/wilbur/www/static/huxiu.xml",
+            "Feed.Path": "huxiu.xml",
             "Request.Interval": 5
         },
         {
             "Feed.Title": "阅读时光",
             "Feed.URL": ["http://www.timetimetime.net"],
-            "Feed.IndexPattern": ["<div class=\"left_contant_title a5\"><span class=\"(zhiding)?biaotifenlei\">(经典语录|阅读生活)</span>{any}<a href=\"{link}\" title=\"{title}\""],
+            "Feed.IndexPattern": ["<div class=\"left_contant_title\">{any}(经典语录|阅读生活){any}<a href=\"{link}\" title=\"{title}\""],
             "Feed.ContentPattern": ["<div class=\"neiz1 a7\">{any}</div>{description}</div>"],
-            "Feed.Path": "/home/wilbur/www/static/timetimetime.xml",
+            "Feed.Path": "timetimetime.xml",
             "Request.Interval": 5 
         },
         {
@@ -22,7 +22,7 @@
             "Feed.URL": ["http://www.hexieshe.com/feed"],
             "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>"],
             "Feed.ContentPattern": ["<article{any}<div class=\"entry\">{description}<div"],
-            "Feed.Path": "/home/wilbur/www/static/hexieshe.xml",
+            "Feed.Path": "hexieshe.xml",
             "Request.Interval": 5
         }
     ]

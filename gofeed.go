@@ -108,9 +108,10 @@ func main() {
 			} else {
 				err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
 				if nil != err {
-					log.Printf("[ERROR] failed to save feed at %s", feedTar.FeedPath)
-				}
-				log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
+                    log.Printf("[ERROR] failed to save feed at %s: %s", feedTar.FeedPath, err)
+				} else {
+                    log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
+                }
 			}
 		}(feedTar)
 	}

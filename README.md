@@ -77,12 +77,15 @@ The custom regular expressions have not been tested properly. So I suggest just 
     -d=false: debug mode
     -l="": path of the log file
     -k=false: keep feed entries which do not have any description
+    -z=9: compression level when saving html cache with gzip in the cache database.
+        0-9 acceptable where 0 means no compression
 
-*  -c: number of cpus, default value is the actual number of your machine's cpus.
-*  -v: print more infomation.
-*  -d: print even more information than `-v` option, should be useful when debugging your index or content patterns.
-*  -l: append output in a log file
-*  -k: do not strip feed entries whose description are empty
+*  -c: Number of cpus, default value is the actual number of your machine's cpus.
+*  -v: Print more infomation.
+*  -d: Print even more information than `-v` option, should be useful when debugging your index or content patterns.
+*  -l: Append output in a log file
+*  -k: Do not strip feed entries whose description are empty
+*  -z: Gofeed compresses html cache data with gzip by default. This option can set compression level of gzip, however, you can pass 0 to disable compression.
 
 ## License
 
