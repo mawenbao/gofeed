@@ -1,18 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"database/sql"
-    "time"
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-    "bytes"
-    "compress/gzip"
-    "io/ioutil"
+	"time"
 )
 
 // create the cache db with sqlite3 driver
@@ -97,11 +97,11 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
 	}
 	rowInd := 0
 	for rows.Next() {
-        c := new(HtmlCache)
+		c := new(HtmlCache)
 		var urlStr, lastmod, expires, dateStr string
 		err = rows.Scan(
 			&urlStr,
-            &dateStr,
+			&dateStr,
 			&c.CacheControl,
 			&lastmod,
 			&c.Etag,
@@ -112,40 +112,40 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
 			return
 		}
 
-        // decompress html data
-        if 0 != *gGzipCompressLevel {
-            buff := bytes.NewBuffer(c.Html)
-            gzipR, err := gzip.NewReader(buff)
-            if nil != err {
-                if *gDebug {
-                    log.Printf("[WARN] failed to decompress html data for %s: %s", urlStr, err)
-                }
-            } else {
-                c.Html, err = ioutil.ReadAll(gzipR)
-            }
-        }
+		// decompress html data
+		if 0 != *gGzipCompressLevel {
+			buff := bytes.NewBuffer(c.Html)
+			gzipR, err := gzip.NewReader(buff)
+			if nil != err {
+				if *gDebug {
+					log.Printf("[WARN] failed to decompress html data for %s: %s", urlStr, err)
+				}
+			} else {
+				c.Html, err = ioutil.ReadAll(gzipR)
+			}
+		}
 
 		if c.URL, err = url.Parse(urlStr); nil != err {
 			log.Printf("[ERROR] failed to parse url from rawurl string %s: %s", urlStr, err)
 		}
 		if "" != lastmod {
-            c.LastModified = new(time.Time)
-            if *c.LastModified, err = http.ParseTime(lastmod); nil != err {
-                log.Printf("[ERROR] failed to parse lastmod time string %s: %s", lastmod, err)
-            }
+			c.LastModified = new(time.Time)
+			if *c.LastModified, err = http.ParseTime(lastmod); nil != err {
+				log.Printf("[ERROR] failed to parse lastmod time string %s: %s", lastmod, err)
+			}
 		}
 		if "" != expires {
-            c.Expires = new(time.Time)
-            if *c.Expires, err = http.ParseTime(expires); nil != err {
-                log.Printf("[ERROR] failed to parse expires time string %s: %s", expires, err)
-            }
+			c.Expires = new(time.Time)
+			if *c.Expires, err = http.ParseTime(expires); nil != err {
+				log.Printf("[ERROR] failed to parse expires time string %s: %s", expires, err)
+			}
 		}
-        if "" != dateStr {
-            c.Date = new(time.Time)
-            if *c.Date, err = http.ParseTime(dateStr); nil != err {
-                log.Printf("[ERROR] failed to parse cache date %s: %s", dateStr, err)
-            }
-        }
+		if "" != dateStr {
+			c.Date = new(time.Time)
+			if *c.Date, err = http.ParseTime(dateStr); nil != err {
+				log.Printf("[ERROR] failed to parse cache date %s: %s", dateStr, err)
+			}
+		}
 
 		caches = append(caches[:rowInd], c)
 		rowInd += 1
@@ -190,45 +190,45 @@ func ExecInsertUpdateSQL(caches []*HtmlCache, dbPath string, sqlStr string) (err
 
 	urls := ""
 	for _, c := range caches {
-        if nil == c {
-            log.Printf("[ERROR] cache is nil, ignore this one")
-            continue
-        }
-        if nil == c.Date {
-            log.Printf("[ERROR] cache date is nil, will not save this sucker in cache db")
-            continue
-        }
+		if nil == c {
+			log.Printf("[ERROR] cache is nil, ignore this one")
+			continue
+		}
+		if nil == c.Date {
+			log.Printf("[ERROR] cache date is nil, will not save this sucker in cache db")
+			continue
+		}
 
-        var htmlBuff bytes.Buffer
-        compressed := false
+		var htmlBuff bytes.Buffer
+		compressed := false
 
-        if 0 != *gGzipCompressLevel {
-            // compress html data
-            gzipW, err := gzip.NewWriterLevel(&htmlBuff, *gGzipCompressLevel)
-            if nil != err {
-                log.Printf("[ERROR] failed to create gzip writer: %s", err)
-                continue
-            }
-            _, err = gzipW.Write(c.Html)
-            if nil != err {
-                // on write error, cache html is saved uncompressed
-                log.Printf("[ERROR] gzip failed to compress html data: %s, will not compress the html data", err)
-            }
-            gzipW.Close()
-            compressed = true
-        }
-        htmlData := c.Html
-        if compressed {
-            htmlData = htmlBuff.Bytes()
-        }
+		if 0 != *gGzipCompressLevel {
+			// compress html data
+			gzipW, err := gzip.NewWriterLevel(&htmlBuff, *gGzipCompressLevel)
+			if nil != err {
+				log.Printf("[ERROR] failed to create gzip writer: %s", err)
+				continue
+			}
+			_, err = gzipW.Write(c.Html)
+			if nil != err {
+				// on write error, cache html is saved uncompressed
+				log.Printf("[ERROR] gzip failed to compress html data: %s, will not compress the html data", err)
+			}
+			gzipW.Close()
+			compressed = true
+		}
+		htmlData := c.Html
+		if compressed {
+			htmlData = htmlBuff.Bytes()
+		}
 
-        var lastmod, expires string
-        if nil != c.LastModified {
-            lastmod = c.LastModified.Format(http.TimeFormat)
-        }
-        if nil != c.Expires {
-            expires = c.Expires.Format(http.TimeFormat)
-        }
+		var lastmod, expires string
+		if nil != c.LastModified {
+			lastmod = c.LastModified.Format(http.TimeFormat)
+		}
+		if nil != c.Expires {
+			expires = c.Expires.Format(http.TimeFormat)
+		}
 		_, err = statmt.Exec(c.URL.String(), c.Date.Format(http.TimeFormat), c.CacheControl, lastmod, c.Etag, expires, htmlData)
 		urls += c.URL.String() + " "
 		if nil != err {
@@ -262,7 +262,7 @@ func GetHtmlCacheByURL(dbPath, urlStr string) (cache *HtmlCache, err error) {
 		default:
 			log.Printf("[ERROR] failed to get cache from db %s by url %s: %s", dbPath, urlStr, err)
 		}
-        return nil, err
+		return nil, err
 	}
 
 	return htmlCacheSlice[0], err
@@ -307,4 +307,3 @@ func UpdateHtmlCache(dbPath string, caches []*HtmlCache) (err error) {
 	}
 	return
 }
-

@@ -2,12 +2,12 @@ package main
 
 import (
 	"log"
-    "time"
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
-    "strconv"
+	"time"
 )
 
 // return later time
@@ -70,26 +70,25 @@ func FindContentReg(feedTar *FeedTarget, feedURL *url.URL) *regexp.Regexp {
 
 // parse http Cache-Control response header
 func ExtractMaxAge(cacheCtl string) (maxAge time.Duration) {
-    for _, str := range strings.Split(cacheCtl, ",") {
-        if strings.HasPrefix(str, "max-age") {
-            maxAgeStrs := strings.Split(str, "=")
-            if 2 != len(maxAgeStrs) {
-                log.Printf("[ERROR] failed to parse max-age %s", str)
-                return
-            }
-            maxAgeInt, err := strconv.Atoi(strings.TrimSpace(maxAgeStrs[1]))
-            if nil != err {
-                log.Printf("failed to convert max age string to int, originally %s, trimmed as %s: %s",
-                    maxAgeStrs[1], strings.TrimSpace(maxAgeStrs[1]), err)
-            }
-            return time.Duration(maxAgeInt)
-        }
-    }
+	for _, str := range strings.Split(cacheCtl, ",") {
+		if strings.HasPrefix(str, "max-age") {
+			maxAgeStrs := strings.Split(str, "=")
+			if 2 != len(maxAgeStrs) {
+				log.Printf("[ERROR] failed to parse max-age %s", str)
+				return
+			}
+			maxAgeInt, err := strconv.Atoi(strings.TrimSpace(maxAgeStrs[1]))
+			if nil != err {
+				log.Printf("failed to convert max age string to int, originally %s, trimmed as %s: %s",
+					maxAgeStrs[1], strings.TrimSpace(maxAgeStrs[1]), err)
+			}
+			return time.Duration(maxAgeInt)
+		}
+	}
 
-    return
+	return
 }
 
 // get response http header
 //func ExtractHttpResponseHeader(headers http.Header, headerName string) string {
 //}
-

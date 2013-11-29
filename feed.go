@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/xml"
 	"errors"
-    "time"
 	"log"
 	"net/http"
+	"time"
 )
 
 func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
@@ -17,14 +17,14 @@ func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
 	item.Title = entry.Title
 	item.Link = entry.Link.String()
 	item.Description = string(entry.Content)
-    if nil != entry.Cache.LastModified {
-        item.PubDate = entry.Cache.LastModified.Format(http.TimeFormat)
-    } else if nil != entry.Cache.Date {
-        item.PubDate = entry.Cache.Date.Format(http.TimeFormat)
-    } else {
-        log.Printf("[ERROR] entry's cache date is nil %s", entry.Link.String())
-        item.PubDate = time.Now().Format(http.TimeFormat)
-    }
+	if nil != entry.Cache.LastModified {
+		item.PubDate = entry.Cache.LastModified.Format(http.TimeFormat)
+	} else if nil != entry.Cache.Date {
+		item.PubDate = entry.Cache.Date.Format(http.TimeFormat)
+	} else {
+		log.Printf("[ERROR] entry's cache date is nil %s", entry.Link.String())
+		item.PubDate = time.Now().Format(http.TimeFormat)
+	}
 	item.Guid = entry.Link.String()
 
 	return

@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-    *gDebug = true
+	*gDebug = true
 }
 
 func TestParseJsonConfig(t *testing.T) {
@@ -94,9 +94,9 @@ func TestFetchHtml(t *testing.T) {
 		!cache.LastModified.Equal(*cache2.LastModified) ||
 		0 != bytes.Compare(cache.Html, cache2.Html) {
 
-        t.Logf("url %t, %s vs %s", cache.URL.String() == cache2.URL.String(), cache.URL.String(), cache2.URL.String())
-        t.Logf("lastmod %t, %s vs %s", cache.LastModified.Equal(*cache2.LastModified), cache.LastModified.String(), cache2.LastModified.String())
-        t.Logf("html length %t, %d vs %d", len(cache.Html) == len(cache2.Html), len(cache.Html), len(cache2.Html))
+		t.Logf("url %t, %s vs %s", cache.URL.String() == cache2.URL.String(), cache.URL.String(), cache2.URL.String())
+		t.Logf("lastmod %t, %s vs %s", cache.LastModified.Equal(*cache2.LastModified), cache.LastModified.String(), cache2.LastModified.String())
+		t.Logf("html length %t, %d vs %d", len(cache.Html) == len(cache2.Html), len(cache.Html), len(cache2.Html))
 		t.Fatalf("html cache not match")
 	}
 
@@ -198,10 +198,10 @@ func TestDB(t *testing.T) {
 	url1, _ := url.Parse("http://blog.atime.me")
 	url2, _ := url.Parse("http://atime.me")
 
-    dateNow := time.Now()
+	dateNow := time.Now()
 	cache := []*HtmlCache{
-        &HtmlCache{URL: url1, Date: &dateNow, LastModified: &dateNow, Html: []byte("hello world")},
-        &HtmlCache{URL: url2, Date: &dateNow, LastModified: &dateNow, Html: []byte("hello world")},
+		&HtmlCache{URL: url1, Date: &dateNow, LastModified: &dateNow, Html: []byte("hello world")},
+		&HtmlCache{URL: url2, Date: &dateNow, LastModified: &dateNow, Html: []byte("hello world")},
 	}
 
 	err = PutHtmlCache(cacheDB, cache)
@@ -216,7 +216,7 @@ func TestDB(t *testing.T) {
 
 	cache2, err = GetHtmlCacheByURL(cacheDB, cache[0].URL.String())
 	if nil != err {
-        t.Fatalf("failed to get html cache for url %s: %s", cache[0].URL.String(), err)
+		t.Fatalf("failed to get html cache for url %s: %s", cache[0].URL.String(), err)
 	}
 	if cache2.URL.String() != cache[0].URL.String() ||
 		cache2.LastModified.Format(http.TimeFormat) != cache[0].LastModified.Format(http.TimeFormat) ||
@@ -300,4 +300,3 @@ func TestParseIndexAndContentHtml(t *testing.T) {
 		}
 	}
 }
-

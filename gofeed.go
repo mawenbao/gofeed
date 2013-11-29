@@ -15,12 +15,12 @@ func init() {
 }
 
 var (
-	gVerbose        = flag.Bool("v", false, "be verbose")
-	gDebug          = flag.Bool("d", false, "debug mode")
-	gCPUNum         = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
-	gLogfile        = flag.String("l", "", "path of the log file")
-	gKeepEmptyEntry = flag.Bool("k", false, "keep feed entries which do not have any description")
-    gGzipCompressLevel = flag.Int("z", 9, "compression level when saving html cache with gzip in the cache database.\n\t0-9 acceptable where 0 means no compression")
+	gVerbose           = flag.Bool("v", false, "be verbose")
+	gDebug             = flag.Bool("d", false, "debug mode")
+	gCPUNum            = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
+	gLogfile           = flag.String("l", "", "path of the log file")
+	gKeepEmptyEntry    = flag.Bool("k", false, "keep feed entries which do not have any description")
+	gGzipCompressLevel = flag.Int("z", 9, "compression level when saving html cache with gzip in the cache database.\n\t0-9 acceptable where 0 means no compression")
 )
 
 func showUsage() {
@@ -45,10 +45,10 @@ func main() {
 		*gCPUNum = runtime.NumCPU()
 	}
 
-    if *gGzipCompressLevel < 0 || *gGzipCompressLevel > 9 {
-        log.Printf("[WARN] gzip compression level invalid: %d, will use level 9 to compress html cache data", *gGzipCompressLevel)
-        *gGzipCompressLevel = 9
-    }
+	if *gGzipCompressLevel < 0 || *gGzipCompressLevel > 9 {
+		log.Printf("[WARN] gzip compression level invalid: %d, will use level 9 to compress html cache data", *gGzipCompressLevel)
+		*gGzipCompressLevel = 9
+	}
 
 	var logfile *os.File
 	var err error
@@ -108,10 +108,10 @@ func main() {
 			} else {
 				err = ioutil.WriteFile(feedTar.FeedPath, rss2FeedStr, 0644)
 				if nil != err {
-                    log.Printf("[ERROR] failed to save feed at %s: %s", feedTar.FeedPath, err)
+					log.Printf("[ERROR] failed to save feed at %s: %s", feedTar.FeedPath, err)
 				} else {
-                    log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
-                }
+					log.Printf("[DONE] saving feed at %s", feedTar.FeedPath)
+				}
 			}
 		}(feedTar)
 	}

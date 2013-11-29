@@ -22,21 +22,21 @@ func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0")
 	// set cache related headers
-    if "" != cache.CacheControl {
-        req.Header.Set("Cache-Control", cache.CacheControl)
-    }
-    if nil != cache.LastModified {
-        req.Header.Set("If-Modified-Since", cache.LastModified.Format(http.TimeFormat))
-    }
-    if "" != cache.Etag {
-        req.Header.Set("If-None-Match", cache.Etag)
-    }
+	if "" != cache.CacheControl {
+		req.Header.Set("Cache-Control", cache.CacheControl)
+	}
+	if nil != cache.LastModified {
+		req.Header.Set("If-Modified-Since", cache.LastModified.Format(http.TimeFormat))
+	}
+	if "" != cache.Etag {
+		req.Header.Set("If-None-Match", cache.Etag)
+	}
 
-    // set cache date as request date
-    dateNow := time.Now()
-    cache.Date = &dateNow
+	// set cache date as request date
+	dateNow := time.Now()
+	cache.Date = &dateNow
 
-    // send request
+	// send request
 	client := new(http.Client)
 	resp, err = client.Do(req)
 	if nil != err {
@@ -51,16 +51,16 @@ func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
 func ParseHttpResponse(resp *http.Response, cache *HtmlCache) (err error) {
 	defer resp.Body.Close()
 
-    // set cache date
-    if cacheDate, ok := resp.Header["Date"]; ok {
-        cache.Date = new(time.Time)
-        *cache.Date, err = http.ParseTime(cacheDate[0])
-        if nil != err {
-            log.Printf("[ERROR] failed to parse http response Date header %s: %s", cacheDate, err)
-        }
-    }
+	// set cache date
+	if cacheDate, ok := resp.Header["Date"]; ok {
+		cache.Date = new(time.Time)
+		*cache.Date, err = http.ParseTime(cacheDate[0])
+		if nil != err {
+			log.Printf("[ERROR] failed to parse http response Date header %s: %s", cacheDate, err)
+		}
+	}
 
-    if http.StatusNotModified == resp.StatusCode {
+	if http.StatusNotModified == resp.StatusCode {
 		// not modified, use cache
 		cache.Status = CACHE_NOT_MODIFIED
 		if *gVerbose {
@@ -87,14 +87,14 @@ func ParseHttpResponse(resp *http.Response, cache *HtmlCache) (err error) {
 			cache.CacheControl = ""
 		}
 		if lastmod, ok := resp.Header["Last-Modified"]; ok {
-            cache.LastModified = new(time.Time)
+			cache.LastModified = new(time.Time)
 			*cache.LastModified, err = http.ParseTime(lastmod[0])
 			if nil != err {
 				log.Printf("[ERROR] error parsing http Last-Modified response header %s: %s", lastmod[0], err)
 			}
 		}
 		if expireStr, ok := resp.Header["Expires"]; ok {
-            cache.Expires = new(time.Time)
+			cache.Expires = new(time.Time)
 			*cache.Expires, err = http.ParseTime(expireStr[0])
 			if nil != err {
 				log.Printf("[ERROR] error parsing http Expires response header %s: %s", expireStr[0], err)
@@ -118,15 +118,15 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 		// cache not found
 		cache = &HtmlCache{Status: CACHE_NEW}
 	} else {
-        // cache not expired, reuse it
-        if time.Now().Before(cache.Date.Add(time.Second * ExtractMaxAge(cache.CacheControl))) ||
-        (nil != cache.Expires && time.Now().After(*cache.Expires)) {
-            log.Printf("cache for %s has not expired", cache.URL.String())
-            return cache, nil
+		// cache not expired, reuse it
+		if time.Now().Before(cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl))) ||
+			(nil != cache.Expires && time.Now().After(*cache.Expires)) {
+			log.Printf("cache for %s has not expired", cache.URL.String())
+			return cache, nil
 		}
 	}
 
-    // cache not found or expired, send new request
+	// cache not found or expired, send new request
 	cache.URL = normalURL
 	resp, err := SendHttpRequest(cache)
 	if nil != err {

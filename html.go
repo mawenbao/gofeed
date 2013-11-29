@@ -100,12 +100,12 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 			feed.Description = feedTar.Description
 			// use first index page and url
 			feed.URL = tarURL
-            dateNow := time.Now()
-            if nil == indexCache.LastModified {
-                feed.LastModified = &dateNow
-            } else {
-                feed.LastModified = indexCache.LastModified
-            }
+			dateNow := time.Now()
+			if nil == indexCache.LastModified {
+				feed.LastModified = &dateNow
+			} else {
+				feed.LastModified = indexCache.LastModified
+			}
 		} else {
 			// use later lastmod time
 			if nil != indexCache.LastModified && feed.LastModified.Before(*indexCache.LastModified) {

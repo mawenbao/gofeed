@@ -85,7 +85,7 @@ type FeedTarget struct {
 type Feed struct {
 	Title        string
 	Description  string
-	URL          *url.URL // URL == nil means feed is invalid
+	URL          *url.URL   // URL == nil means feed is invalid
 	LastModified *time.Time // cannot be nil
 	Entries      []*FeedEntry
 }
@@ -130,7 +130,7 @@ type HtmlCache struct {
 	Status int // default is CACHE_NOT_MODIFIED
 
 	URL          *url.URL
-    Date         *time.Time // date of the html request, should never be nil
+	Date         *time.Time // date of the html request, should never be nil
 	CacheControl string
 	LastModified *time.Time
 	Etag         string
