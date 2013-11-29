@@ -20,6 +20,7 @@ var (
 	gCPUNum         = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
 	gLogfile        = flag.String("l", "", "path of the log file")
 	gKeepEmptyEntry = flag.Bool("k", false, "keep feed entries which do not have any description")
+    gGzipCompressLevel = flag.Int("z", 9, "compression level when saving html cache with gzip in the cache database.\n\t0-9 acceptable where 0 means no compression")
 )
 
 func showUsage() {
@@ -43,6 +44,11 @@ func main() {
 		log.Printf("[WARN] cpu number %d too big, wil be set to actual number of your cpus: %d", *gCPUNum, runtime.NumCPU())
 		*gCPUNum = runtime.NumCPU()
 	}
+
+    if *gGzipCompressLevel < 0 || *gGzipCompressLevel > 9 {
+        log.Printf("[WARN] gzip compression level invalid: %d, will use level 9 to compress html cache data", *gGzipCompressLevel)
+        *gGzipCompressLevel = 9
+    }
 
 	var logfile *os.File
 	var err error

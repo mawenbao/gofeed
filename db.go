@@ -9,6 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+    "bytes"
+    "compress/gzip"
+    "io/ioutil"
 )
 
 // create the cache db with sqlite3 driver
@@ -105,6 +108,17 @@ func ExecQuerySQL(dbPath string, expectSize int, sqlStr string, args ...interfac
 			log.Printf("[ERROR] failed to scan data from result row: %s", err)
 			return
 		}
+
+        // decompress html data
+        if 0 != *gGzipCompressLevel {
+            buff := bytes.NewBuffer(c.Html)
+            gzipR, err := gzip.NewReader(buff)
+            if nil != err && *gDebug {
+                log.Printf("[WARN] failed to decompress html data: %s", err)
+            } else {
+                c.Html, err = ioutil.ReadAll(gzipR)
+            }
+        }
 		if c.URL, err = url.Parse(urlStr); nil != err {
 			log.Printf("[ERROR] failed to parse url from rawurl string %s: %s", urlStr, err)
 		}
@@ -158,13 +172,36 @@ func ExecInsertUpdateSQL(caches []HtmlCache, dbPath string, sqlStr string) (err 
 
 	urls := ""
 	for _, c := range caches {
+        var htmlBuff bytes.Buffer
+        compressed := false
+
+        if 0 != *gGzipCompressLevel {
+            // compress html data
+            gzipW, err := gzip.NewWriterLevel(&htmlBuff, *gGzipCompressLevel)
+            if nil != err {
+                log.Printf("[ERROR] failed to create gzip writer: %s", err)
+                continue
+            }
+            _, err = gzipW.Write(c.Html)
+            if nil != err {
+                // on write error, cache html is saved uncompressed
+                log.Printf("[ERROR] gzip failed to compress html data: %s, will not compress the html data", err)
+            }
+            gzipW.Close()
+            compressed = true
+        }
+
+        htmlData := c.Html
+        if compressed {
+            htmlData = htmlBuff.Bytes()
+        }
 		_, err = statmt.Exec(
 			c.URL.String(),
 			c.CacheControl,
 			c.LastModified.Format(http.TimeFormat),
 			c.Etag,
 			c.Expires.Format(http.TimeFormat),
-			c.Html)
+			htmlData)
 		urls += c.URL.String() + " "
 		if nil != err {
 			log.Printf("[ERROR] failed to exec insert/update sql %s: %s", sqlStr, err)
@@ -241,3 +278,4 @@ func UpdateHtmlCache(dbPath string, caches []HtmlCache) (err error) {
 	}
 	return
 }
+
