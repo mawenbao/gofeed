@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// download html
 func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
 	if *gVerbose {
 		log.Printf("start to request %s", cache.URL)
@@ -131,11 +130,11 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 	resp, err := SendHttpRequest(cache)
 	if nil != err {
 		if CACHE_NEW == cache.Status || !*gAlwaysUseCache {
-			log.Printf("[ERROR] failed to download web page %s, just ignore it", normalURL.String())
+			log.Printf("[ERROR] failed to get %s, just ignore it", normalURL.String())
 			return
 		} else {
 			// just print a warning message, use old cache
-			log.Printf("[WARN] failed to download web page %s, use cache instead", normalURL.String())
+			log.Printf("[WARN] failed to get %s, use cache instead", normalURL.String())
 			return cache, nil
 		}
 	} else {
