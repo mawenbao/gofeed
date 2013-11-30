@@ -122,7 +122,7 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 		if time.Now().Before(cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl))) ||
 			(nil != cache.Expires && time.Now().After(*cache.Expires)) {
 			log.Printf("cache for %s has not expired", cache.URL.String())
-			return cache, nil
+			return
 		}
 	}
 
@@ -130,12 +130,13 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 	cache.URL = normalURL
 	resp, err := SendHttpRequest(cache)
 	if nil != err {
-		if CACHE_NEW == cache.Status {
+		if CACHE_NEW == cache.Status || !*gAlwaysUseCache {
 			log.Printf("[ERROR] failed to download web page %s, just ignore it", normalURL.String())
 			return
 		} else {
-			log.Printf("[WARN] failed to download web page %s, use cache instead", normalURL.String())
 			// just print a warning message, use old cache
+			log.Printf("[WARN] failed to download web page %s, use cache instead", normalURL.String())
+			return cache, nil
 		}
 	} else {
 		// parse http response
@@ -151,10 +152,16 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 	switch cache.Status {
 	case CACHE_NEW:
 		// save html cache
-		PutHtmlCache(dbPath, []*HtmlCache{cache})
+		err = PutHtmlCache(dbPath, []*HtmlCache{cache})
+		if nil != err {
+			log.Printf("[ERROR] failed to save new cache for %s: %s", cache.URL.String(), err)
+		}
 	case CACHE_MODIFIED:
 		// update html cache
-		UpdateHtmlCache(dbPath, []*HtmlCache{cache})
+		err = UpdateHtmlCache(dbPath, []*HtmlCache{cache})
+		if nil != err {
+			log.Printf("[ERROR} failed to update cache for %s: %s", cache.URL.String(), err)
+		}
 	}
 
 	return

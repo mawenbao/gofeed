@@ -19,6 +19,7 @@ var (
 	gDebug             = flag.Bool("d", false, "debug mode")
 	gCPUNum            = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
 	gLogfile           = flag.String("l", "", "path of the log file")
+	gAlwaysUseCache    = flag.Bool("a", false, "use cache if failed to download web page")
 	gKeepEmptyEntry    = flag.Bool("k", false, "keep feed entries which do not have any description")
 	gGzipCompressLevel = flag.Int("z", 9, "compression level when saving html cache with gzip in the cache database.\n\t0-9 acceptable where 0 means no compression")
 )
