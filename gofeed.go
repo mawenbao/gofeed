@@ -24,7 +24,7 @@ var (
 )
 
 func showUsage() {
-	fmt.Printf("Usage %s [-v][-d][-c cpu_number][-l log_file] json_config_file\n\n", os.Args[0])
+	fmt.Printf("Usage %s [-v][-d][-c cpu_number][-l log_file][-k][-z compression_level] json_config_file\n\n", os.Args[0])
 	fmt.Printf("Flags:\n")
 	flag.PrintDefaults()
 }
