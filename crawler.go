@@ -130,21 +130,24 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 	cache.URL = normalURL
 	resp, err := SendHttpRequest(cache)
 	if nil != err {
-		log.Printf("[ERROR] failed sending http request to %s: %s", cache.URL.String(), err)
-		// stop
-		return
-	}
-
-	err = ParseHttpResponse(resp, cache)
-	if nil != err {
 		if CACHE_NEW == cache.Status {
 			log.Printf("[ERROR] failed to download web page %s, just ignore it", normalURL.String())
 			return
 		} else {
-			log.Printf("[ERROR] failed to download web page %s, use cache instead", normalURL.String())
+			log.Printf("[WARN] failed to download web page %s, use cache instead", normalURL.String())
+			// just print a warning message, use old cache
+		}
+	} else {
+		// parse http response
+		err = ParseHttpResponse(resp, cache)
+		if nil != err {
+			log.Printf("[ERROR] failed parsing response of %s: %s", cache.URL.String(), err)
+			// stop
+			return
 		}
 	}
 
+	// ignore cache which is not modified or failed with a new request
 	switch cache.Status {
 	case CACHE_NEW:
 		// save html cache
