@@ -22,10 +22,11 @@ var (
 	gAlwaysUseCache    = flag.Bool("a", false, "use cache if failed to download web page")
 	gKeepEmptyEntry    = flag.Bool("k", false, "keep feed entries which do not have any description")
 	gGzipCompressLevel = flag.Int("z", 9, "compression level when saving html cache with gzip in the cache database.\n\t0-9 acceptable where 0 means no compression")
+	gVersion           = flag.Bool("version", false, "print gofeed version")
 )
 
 func showUsage() {
-	fmt.Printf("Usage %s [-v][-d][-c cpu_number][-l log_file][-k][-z compression_level] json_config_file\n\n", os.Args[0])
+	fmt.Printf("Usage %s [-version][-v][-d][-c cpu_number][-l log_file][-k][-z compression_level] json_config_file\n\n", os.Args[0])
 	fmt.Printf("Flags:\n")
 	flag.PrintDefaults()
 }
@@ -33,6 +34,12 @@ func showUsage() {
 func main() {
 	flag.Usage = showUsage
 	flag.Parse()
+
+	// print gofeed version
+	if *gVersion {
+		fmt.Printf("%s %s by mawenbao\n", GOFEED_NAME, GOFEED_VERSION)
+		return
+	}
 
 	args := flag.Args()
 	if 0 == len(args) || 1 < len(args) {

@@ -69,7 +69,7 @@ The custom regular expressions have not been tested properly. So I suggest just 
 
 ## Command line options
 
-    Usage ./gofeed [-v][-d][-c cpu_number] json_config_file
+    Usage ./gofeed [-version][-v][-d][-c cpu_number][-l log_file][-k][-z compression_level] json_config_file
 
     Flags:
     -a=false: use cache if failed to download web page
@@ -80,6 +80,7 @@ The custom regular expressions have not been tested properly. So I suggest just 
     -k=false: keep feed entries which do not have any description
     -z=9: compression level when saving html cache with gzip in the cache database.
         0-9 acceptable where 0 means no compression
+    -version=false: print gofeed version
 
 *  -a: If failed to download the target url, try to use cache even it has expired.
 *  -c: Number of cpus, default value is the actual number of your machine's cpus.
@@ -88,6 +89,7 @@ The custom regular expressions have not been tested properly. So I suggest just 
 *  -l: Append output in a log file
 *  -k: Do not strip feed entries whose description are empty
 *  -z: Gofeed compresses html cache data with gzip by default. This option can set compression level of gzip, however, you can pass 0 to disable compression.
+*  -version: Print gofeed version
 
 ## License
 
