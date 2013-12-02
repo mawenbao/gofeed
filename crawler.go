@@ -119,9 +119,21 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 	} else {
 		// cache not expired, reuse it
 		if time.Now().Before(cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl))) ||
-			(nil != cache.Expires && time.Now().After(*cache.Expires)) {
+			(nil != cache.Expires && time.Now().Before(*cache.Expires)) {
+			if *gDebug {
+				log.Printf("[DEBUG] time.Now() %s for %s", time.Now().Local().String(), cache.URL.String())
+				log.Printf("[DEBUG] cache.Expires %s for %s", cache.Expires.Local().String(), cache.URL.String())
+				log.Printf("[DEBUG] cache.Date %s for %s", cache.Date.Local().String(), cache.URL.String())
+				log.Printf("[DEBUG] cache.CacheControl %s for %s", cache.CacheControl, cache.URL.String())
+				log.Printf("[DEBUG] cache.Date + MaxAge %s for %s", cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl)).Local().String(), cache.URL.String())
+			}
 			log.Printf("cache for %s has not expired", cache.URL.String())
 			return
+		} else {
+			// cache has expired
+			if *gVerbose {
+				log.Printf("cache for %s has expired", cache.URL.String())
+			}
 		}
 	}
 
