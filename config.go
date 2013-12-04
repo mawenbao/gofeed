@@ -24,6 +24,12 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 		}
 	}
 
+	// parse cache lifetime
+	cacheLifeTime := ExtractCacheLifetime(conf.CacheLifetime)
+	if -2 == cacheLifeTime {
+		log.Fatalf("[ERROR] wrong cache lifetime %s in config file %s", conf.CacheLifetime, path)
+	}
+
 	// check cache db
 	if "" == conf.CacheDB {
 		conf.CacheDB = "cache.db"
@@ -41,9 +47,10 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 	for i := 0; i < len(conf.Targets); i++ {
 		tar := &conf.Targets[i]
 		feedTar := &FeedTarget{
-			CacheDB:     conf.CacheDB,
-			ReqInterval: tar.ReqInterval,
-			Description: tar.Description,
+			CacheDB:       conf.CacheDB,
+			CacheLifetime: cacheLifeTime,
+			ReqInterval:   tar.ReqInterval,
+			Description:   tar.Description,
 		}
 
 		// abs feed path

@@ -14,6 +14,38 @@ func init() {
 	*gDebug = true
 }
 
+func TestExtractCacheLifetime(t *testing.T) {
+	sampleCacheTimeStr := []string{
+		"2d",
+		"100h",
+		"2D5h3M4s",
+		"",
+		"2d5d3s",
+		"2d3M4S10s",
+		"-1d",
+		"05m",
+		"abc",
+	}
+	expectCacheTime := []time.Duration{
+		2 * 24 * time.Hour,
+		100 * time.Hour,
+		(2*24+5)*time.Hour + 3*time.Minute + 4*time.Second,
+		time.Duration(-1),
+		time.Duration(-2),
+		time.Duration(-2),
+		time.Duration(-2),
+		time.Duration(-2),
+		time.Duration(-2),
+	}
+
+	for i, _ := range sampleCacheTimeStr {
+		actualCacheLife := ExtractCacheLifetime(sampleCacheTimeStr[i])
+		if expectCacheTime[i] != actualCacheLife {
+			t.Fatalf("extract cache lifetime failed, expect %d from %s, got %d", expectCacheTime[i], sampleCacheTimeStr[i], actualCacheLife)
+		}
+	}
+}
+
 func TestParseJsonConfig(t *testing.T) {
 	config_file := "example_config2.json"
 	feedTargets := ParseJsonConfig(config_file)
@@ -76,7 +108,7 @@ func TestFetchHtml(t *testing.T) {
 
 	// new cache
 	url, _ := url.Parse("http://blog.atime.me/agreement.html")
-	cache, err := FetchHtml(url, cacheDB)
+	cache, err := FetchHtml(url, cacheDB, time.Duration(-1))
 	if nil != err {
 		t.Fatalf("failed to fetch html %s", err)
 	}
@@ -101,7 +133,7 @@ func TestFetchHtml(t *testing.T) {
 	}
 
 	// use old cache
-	cache4, err := FetchHtml(url, cacheDB)
+	cache4, err := FetchHtml(url, cacheDB, time.Duration(-1))
 	if nil != err || CACHE_NOT_MODIFIED != cache4.Status {
 		t.Fatalf("failed to reuse html cache for %s: %s", url, err)
 	}
@@ -235,7 +267,16 @@ func TestDB(t *testing.T) {
 	cache3, err := GetHtmlCacheByURL(cacheDB, cache2.URL.String())
 	if cache2.CacheControl != cache3.CacheControl {
 		t.Fatalf("updated CacheControl does match, %s vs %s", cache2.CacheControl, cache3.CacheControl)
-		os.Exit(1)
+	}
+
+	// test remove
+	err = DelHtmlCacheByURL(cacheDB, cache2.URL.String())
+	if nil != err {
+		t.Fatal("failed to remove record from db")
+	}
+	_, err = GetHtmlCacheByURL(cacheDB, cache2.URL.String())
+	if nil == err {
+		t.Fatal("failed to remove record from db, record still exists")
 	}
 }
 

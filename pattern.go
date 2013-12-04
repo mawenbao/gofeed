@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func PatternToRegex(pat string) string {
@@ -101,4 +103,67 @@ func CompileIndexContentPatterns(feedTar *FeedTarget, tar *TargetConfig) (err er
 	}
 
 	return
+}
+
+// return -1, cache lives forever
+// return -2, parse error
+func ExtractCacheLifetime(cacheLifeStr string) time.Duration {
+	cacheLifeStr = strings.TrimSpace(cacheLifeStr)
+	cacheLifeStr = strings.ToLower(cacheLifeStr)
+	if "" == cacheLifeStr {
+		return time.Duration(-1)
+	}
+
+	// check pattern
+	cacheLifeAllReg := regexp.MustCompile(CACHE_LIFETIME_ALL_REG)
+	if !cacheLifeAllReg.MatchString(cacheLifeStr) {
+		log.Printf("[ERROR] failed to match cache lifetime string %s with pattern %s", cacheLifeStr, CACHE_LIFETIME_ALL_REG)
+		return time.Duration(-2)
+	}
+
+	cacheLifeReg := regexp.MustCompile(CACHE_LIFETIME_REG)
+	match := cacheLifeReg.FindAllStringSubmatch(cacheLifeStr, -1)
+	if nil == match {
+		log.Printf("[ERROR] failed to match cache lifetime string %s with pattern %s", cacheLifeStr, CACHE_LIFETIME_REG)
+		return time.Duration(-2)
+	}
+
+	cacheTotalLife := time.Duration(0)
+	for matInd, subMat := range match {
+		if 3 != len(subMat) {
+			log.Printf("[ERROR] len(submatch) != 3, cache lifetime string is %s and pattern is %s", cacheLifeStr, CACHE_LIFETIME_REG)
+			return time.Duration(-2)
+		}
+		// subMat: [2d, 2, d]
+		timeStr := subMat[1]
+		unitStr := subMat[2]
+		// check duplicate unit: second, minitue, hour or day
+		for i := matInd - 1; i >= 0; i-- {
+			if match[i][2] == unitStr {
+				log.Printf("[ERROR] duplicate unit found in %s, %s and %s", cacheLifeStr, match[i][0], subMat[0])
+				return time.Duration(-2)
+			}
+		}
+		// parse time
+		cacheLife, err := strconv.Atoi(timeStr)
+		if nil != err {
+			log.Printf("[ERROR] failed to parse cache time %s: %s", subMat[0], err)
+			return time.Duration(-2)
+		}
+
+		timeUnit := time.Second
+		switch unitStr {
+		case "s":
+			timeUnit = time.Second
+		case "m":
+			timeUnit = time.Minute
+		case "h":
+			timeUnit = time.Hour
+		case "d":
+			timeUnit = time.Hour * 24
+		}
+		cacheTotalLife += time.Duration(cacheLife) * timeUnit
+	}
+
+	return cacheTotalLife
 }

@@ -1,5 +1,6 @@
 {
     "CacheDB": "cache.db",
+    "CacheLifetime": "1s",
     "Targets": [
         {
             "Feed.Title": "mwb's blog",

@@ -109,7 +109,7 @@ func ParseHttpResponse(resp *http.Response, cache *HtmlCache) (err error) {
 	return
 }
 
-func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) {
+func FetchHtml(normalURL *url.URL, dbPath string, cacheLifetime time.Duration) (cache *HtmlCache, err error) {
 	// try to retrive html from cache first
 	cache, err = GetHtmlCacheByURL(dbPath, normalURL.String())
 
@@ -117,27 +117,42 @@ func FetchHtml(normalURL *url.URL, dbPath string) (cache *HtmlCache, err error) 
 		// cache not found
 		cache = &HtmlCache{Status: CACHE_NEW}
 	} else {
-		// cache not expired, reuse it
-		if time.Now().Before(cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl))) ||
-			(nil != cache.Expires && time.Now().Before(*cache.Expires)) {
-			if *gDebug {
-				log.Printf("[DEBUG] time.Now() %s for %s", time.Now().Local().String(), cache.URL.String())
-				log.Printf("[DEBUG] cache.Expires %s for %s", cache.Expires.Local().String(), cache.URL.String())
-				log.Printf("[DEBUG] cache.Date %s for %s", cache.Date.Local().String(), cache.URL.String())
-				log.Printf("[DEBUG] cache.CacheControl %s for %s", cache.CacheControl, cache.URL.String())
-				log.Printf("[DEBUG] cache.Date + MaxAge %s for %s", cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl)).Local().String(), cache.URL.String())
+		// check cache lifetime
+		if cacheLifetime > 0 && cache.Date.Add(cacheLifetime).Before(time.Now()) {
+			// cache is dead, remove it from cache database, and send new request
+			log.Printf("cache for %s is dead, will remove it from cache database %s", normalURL.String(), dbPath)
+			err = DelHtmlCacheByURL(dbPath, normalURL.String())
+			if nil != err {
+				log.Printf("[ERROR] failed to remove dead cache for %s from database %s", normalURL.String(), dbPath)
+				return
 			}
-			log.Printf("cache for %s has not expired", cache.URL.String())
-			return
+			cache = &HtmlCache{Status: CACHE_NEW}
 		} else {
-			// cache has expired
-			if *gVerbose {
-				log.Printf("cache for %s has expired", cache.URL.String())
+			// if cache is still alive, check if it has expired
+			if time.Now().Before(cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl))) ||
+				(nil != cache.Expires && time.Now().Before(*cache.Expires)) {
+				// cache not expired, reuse it
+				if *gDebug {
+					log.Printf("[DEBUG] time.Now() %s for %s", time.Now().Local().String(), cache.URL.String())
+					log.Printf("[DEBUG] cache.Date %s for %s", cache.Date.Local().String(), cache.URL.String())
+					log.Printf("[DEBUG] cache.CacheControl %s for %s", cache.CacheControl, cache.URL.String())
+					log.Printf("[DEBUG] cache.Date + MaxAge %s for %s", cache.Date.Add(time.Second*ExtractMaxAge(cache.CacheControl)).Local().String(), cache.URL.String())
+					if nil != cache.Expires {
+						log.Printf("[DEBUG] cache.Expires %s for %s", cache.Expires.Local().String(), cache.URL.String())
+					}
+				}
+				log.Printf("cache for %s has not expired", cache.URL.String())
+				return
+			} else {
+				// cache has expired
+				if *gVerbose {
+					log.Printf("cache for %s has expired", cache.URL.String())
+				}
 			}
 		}
 	}
 
-	// cache not found or expired, send new request
+	// cache not found, dead or expired, send new request
 	cache.URL = normalURL
 	resp, err := SendHttpRequest(cache)
 	if nil != err {

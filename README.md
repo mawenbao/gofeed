@@ -39,6 +39,7 @@ Now install gofeed.
 See `example_config.json` and `example_config2.json`.
 
 *  CacheDB: (string) path of html cache database(sqlite3), can be absolute or be relative to the current directory.
+*  CacheLifetime: (string) cache will be removed from cache database after CacheLifetime, "", "5d", "3h", "10m", "1s" and "5d3h10m" are acceptable where "" means cache lives forever in the cache database.
 *  Targets: array of feed targets, each of which runs in a separate goroutine
     *  Request.Interval: (integer) time to wait before sending a http request to the target.
     *  Feed.Path: (string) output path of the rss2 feed file, can be relative or absolute.

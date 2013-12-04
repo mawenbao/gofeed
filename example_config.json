@@ -1,5 +1,6 @@
 {
     "CacheDB": "cache.db",
+    "CacheLifetime": "5d",
     "Targets": [
         {
             "Feed.Title": "虎嗅全文",

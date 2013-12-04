@@ -22,6 +22,9 @@ const (
 
 	// used for extracting feed title/link/content
 	HTML_TITLE_REG = `(?s)<\s*?html.*?<\s*?head.*?<\s*?title\s*?>(?P<title>.+)</\s*?title`
+	// for cache life time
+	CACHE_LIFETIME_ALL_REG = `^([1-9][0-9]*[smhd])+`
+	CACHE_LIFETIME_REG     = `([1-9][0-9]*)([smhd])`
 
 	TITLE_NAME        = "title"
 	PATTERN_TITLE     = "{" + TITLE_NAME + "}"
@@ -57,8 +60,9 @@ var (
 )
 
 type Config struct {
-	CacheDB string         `json:"CacheDB"`
-	Targets []TargetConfig `json:"Targets"`
+	CacheDB       string         `json:"CacheDB"`
+	CacheLifetime string         `json:"CacheLifetime"` // "" means cache lives forever
+	Targets       []TargetConfig `json:"Targets"`
 }
 
 type TargetConfig struct {
@@ -72,14 +76,15 @@ type TargetConfig struct {
 }
 
 type FeedTarget struct {
-	Title       string
-	Description string
-	URLs        []*url.URL
-	IndexRegs   []*regexp.Regexp
-	ContentRegs []*regexp.Regexp
-	FeedPath    string
-	ReqInterval time.Duration
-	CacheDB     string
+	Title         string
+	Description   string
+	URLs          []*url.URL
+	IndexRegs     []*regexp.Regexp
+	ContentRegs   []*regexp.Regexp
+	FeedPath      string
+	ReqInterval   time.Duration
+	CacheDB       string
+	CacheLifetime time.Duration
 }
 
 type Feed struct {

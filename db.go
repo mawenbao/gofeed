@@ -246,6 +246,26 @@ func ExecInsertUpdateSQL(caches []*HtmlCache, dbPath string, sqlStr string) (err
 	return
 }
 
+func DelHtmlCacheByURL(dbPath, urlStr string) error {
+	_, err := ExecQuerySQL(
+		dbPath,
+		0,
+		fmt.Sprintf("DELETE FROM %s WHERE url = ?", DB_HTML_CACHE_TABLE),
+		urlStr)
+
+	if nil != err {
+		switch err.(type) {
+		case DBNoRecordError:
+			return nil
+		default:
+			log.Printf("[ERROR] failed to delete %s from cache database %s", urlStr, dbPath)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func GetHtmlCacheByURL(dbPath, urlStr string) (cache *HtmlCache, err error) {
 	htmlCacheSlice, err := ExecQuerySQL(
 		dbPath,
