@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -10,7 +11,8 @@ import (
 
 const (
 	GOFEED_NAME    = "gofeed"
-	GOFEED_VERSION = "0.1"
+	GOFEED_VERSION = "0.1.1"
+	GOFEED_PROJECT = "https://github.com/mawenbao/gofeed"
 
 	// used to normalize urls
 	HTTP_SCHEME  = "http://"
@@ -48,6 +50,9 @@ const (
 )
 
 var (
+	// used to set http client header User-Agent
+	GOFEED_AGENT = fmt.Sprintf("Mozilla/5.0 (compatible; %s/%s; +%s)", GOFEED_NAME, GOFEED_VERSION, GOFEED_PROJECT)
+
 	// used for filtering html
 	PATTERN_ALL       = []string{PATTERN_ANY, PATTERN_CONTENT, PATTERN_LINK, PATTERN_TITLE}
 	PATTERN_ALL_REGEX = regexp.MustCompile(strings.Join(PATTERN_ALL, "|"))

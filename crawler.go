@@ -19,7 +19,7 @@ func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
 		return
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0")
+	req.Header.Set("User-Agent", GOFEED_AGENT)
 	// set cache related headers
 	if "" != cache.CacheControl {
 		req.Header.Set("Cache-Control", cache.CacheControl)
