@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -11,7 +12,10 @@ import (
 )
 
 func init() {
+	// print detailed debug infomation
 	*gDebug = true
+	//*gVerbose = true
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
 func TestExtractCacheLifetime(t *testing.T) {

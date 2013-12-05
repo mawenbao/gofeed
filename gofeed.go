@@ -10,10 +10,6 @@ import (
 	"sync"
 )
 
-func init() {
-	//log.SetFlags(log.Lshortfile)
-}
-
 var (
 	gVerbose           = flag.Bool("v", false, "be verbose")
 	gDebug             = flag.Bool("d", false, "debug mode")
@@ -70,9 +66,11 @@ func main() {
 		log.SetOutput(logfile)
 	}
 
-	// debug mode is verbose
 	if *gDebug {
+		// debug mode is verbose
 		*gVerbose = true
+		// print file name and line number too
+		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	}
 
 	// parse json configuration first
