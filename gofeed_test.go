@@ -23,6 +23,7 @@ func TestExtractCacheLifetime(t *testing.T) {
 		"2d5d3s",
 		"2d3M4S10s",
 		"-1d",
+		"3d1sabcde",
 		"05m",
 		"abc",
 	}
@@ -31,6 +32,7 @@ func TestExtractCacheLifetime(t *testing.T) {
 		100 * time.Hour,
 		(2*24+5)*time.Hour + 3*time.Minute + 4*time.Second,
 		time.Duration(-1),
+		time.Duration(-2),
 		time.Duration(-2),
 		time.Duration(-2),
 		time.Duration(-2),

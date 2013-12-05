@@ -23,7 +23,7 @@ const (
 	// used for extracting feed title/link/content
 	HTML_TITLE_REG = `(?s)<\s*?html.*?<\s*?head.*?<\s*?title\s*?>(?P<title>.+)</\s*?title`
 	// for cache life time
-	CACHE_LIFETIME_ALL_REG = `^([1-9][0-9]*[smhd])+`
+	CACHE_LIFETIME_ALL_REG = `^([1-9][0-9]*[smhd])+$`
 	CACHE_LIFETIME_REG     = `([1-9][0-9]*)([smhd])`
 
 	TITLE_NAME        = "title"
