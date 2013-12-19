@@ -47,6 +47,7 @@ func main() {
 	if *gCPUNum > runtime.NumCPU() {
 		log.Printf("[WARN] cpu number %d too big, wil be set to actual number of your cpus: %d", *gCPUNum, runtime.NumCPU())
 		*gCPUNum = runtime.NumCPU()
+        runtime.GOMAXPROCS(*gCPUNum)
 	}
 
 	if *gGzipCompressLevel < 0 || *gGzipCompressLevel > 9 {
