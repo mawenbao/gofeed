@@ -1,6 +1,6 @@
 {
-    "CacheDB": "cache.db",
-    "CacheLifetime": "5d",
+    "CacheDB": "gofeed-cache.db",
+    "CacheLifetime": "7d",
     "Targets": [
         {
             "Feed.Title": "虎嗅全文",
@@ -23,9 +23,27 @@
         {
             "Feed.Title": "和邪社全文",
             "Feed.URL": ["http://www.hexieshe.com/feed"],
-            "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>"],
+            "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>{any}<pubDate>{pubdate}</pubDate>"],
             "Feed.ContentPattern": ["<article{any}<div class=\"entry\">{description}<div"],
+            "Feed.PubDateFormat": ["Mon, 02 Jan 2006 15:04:05 -0700"],
             "Feed.Path": "hexieshe.xml",
+            "Request.Interval": 5
+        },
+        {
+            "Feed.Title": "知乎精选",
+            "Feed.URL": ["http://www.zhihujingxuan.com/"],
+            "Feed.IndexPattern": ["<li><h2><a href=\"{link}\"{any}>{title}</a>"],
+            "Feed.ContentPattern": ["<div class=\"context\"{any}</div>{description}</div></div></div><div class=\"articles\">"],
+            "Feed.Path": "zhihujingxuan.xml",
+            "Request.Interval": 5
+        },
+        {
+            "Feed.Title": "南方周末",
+            "Feed.URL": ["http://www.infzm.com/"],
+            "Feed.IndexPattern": ["<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>"],
+            "Feed.ContentPattern": ["<em class=\"pubTime\">(最后更新：)?{pubdate}</em>{any}id=\"articleContent\">{description}(<!--|</section>)"],
+            "Feed.PubDateFormat": ["2006-01-02 15:04:05"],
+            "Feed.Path": "nanfangzhoumo.xml",
             "Request.Interval": 5
         }
     ]
