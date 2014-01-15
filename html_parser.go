@@ -180,7 +180,7 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 				var pubDate time.Time
 				pubDate, err = ParsePubDate(FindPubDate(feedTar, feed.URL), string(match[patInd]))
 				if nil != err {
-					log.Printf("[ERROR] error parsing pubdate of link %s", entry.Link, err)
+					log.Printf("[ERROR] error parsing pubdate of link %s: %s", entry.Link, err)
 				} else {
 					entry.PubDate = &pubDate
 				}
