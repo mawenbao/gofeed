@@ -30,5 +30,12 @@ func RegexpFilter(filterReg *regexp.Regexp, data []byte) (outdata []byte) {
 		}
 	}
 
+	if *gDebug {
+		log.Println("======= debug: filter regex ========")
+		log.Println(filterReg.String())
+		log.Println("======= debug: filtered data =======")
+		log.Println(string(outdata))
+		log.Println("==============")
+	}
 	return
 }

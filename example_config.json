@@ -41,10 +41,17 @@
             "Feed.Title": "南方周末",
             "Feed.URL": ["http://www.infzm.com/"],
             "Feed.IndexPattern": [
-                "<div class=\"header\">(热点新闻|生活|专栏){any}<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>", 
+                "<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>",
+                "<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>",
+                "<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>",
                 "<li><a href=\"{link}\"{any}>{title}</a>"
             ],
-            "Feed.IndexFilterPattern": ["", "<div id=\"Top10\"{any}<ul{any}>{filter}</ul>"],
+            "Feed.IndexFilterPattern": [
+                "<div class=\"header\">热点新闻</div>{filter}<div style=\"margin-bottom:10px;\" id=\"home_ad_a8",
+                "<div class=\"header\">生活</div>{filter}<div id=\"right_container",
+                "<div class=\"header\">专栏</div>{filter}<div id=\"home_ad_a7",
+                "<div id=\"t_0\"{any}>{filter}</div>"
+            ],
             "Feed.ContentPattern": ["<em class=\"pubTime\">(最后更新：)?{pubdate}</em>{any}id=\"articleContent\">{description}(<!--|</section>)"],
             "Feed.PubDateFormat": ["2006-01-02 15:04:05"],
             "Feed.Path": "nanfangzhoumo.xml",

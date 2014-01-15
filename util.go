@@ -86,6 +86,10 @@ func FindContentReg(feedTar *FeedTarget, feedURL *url.URL, indexReg *regexp.Rege
 }
 
 func FindIndexFilterReg(feedTar *FeedTarget, indexReg *regexp.Regexp) *regexp.Regexp {
+	if 0 == len(feedTar.IndexFilterRegs) {
+		return nil
+	}
+
 	if 1 == len(feedTar.IndexFilterRegs) {
 		return feedTar.IndexFilterRegs[0]
 	}
@@ -100,6 +104,10 @@ func FindIndexFilterReg(feedTar *FeedTarget, indexReg *regexp.Regexp) *regexp.Re
 }
 
 func FindContentFilterReg(feedTar *FeedTarget, contReg *regexp.Regexp) *regexp.Regexp {
+	if 0 == len(feedTar.ContentFilterRegs) {
+		return nil
+	}
+
 	if 1 == len(feedTar.ContentFilterRegs) {
 		return feedTar.ContentFilterRegs[0]
 	}

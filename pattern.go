@@ -125,9 +125,9 @@ func CompilePatterns(feedTar *FeedTarget, tar *TargetConfig) (err error) {
 		if "" == strings.TrimSpace(tar.IndexPatterns[j]) {
 			continue
 		}
-		feedTar.IndexFilterRegs[j], err = regexp.Compile(PatternToRegex(tar.IndexPatterns[j]))
+		feedTar.IndexFilterRegs[j], err = regexp.Compile(PatternToRegex(tar.IndexFilterPatterns[j]))
 		if nil != err {
-			log.Printf("[ERROR] error compiling index filter pattern %s", tar.IndexPatterns[j])
+			log.Printf("[ERROR] error compiling index filter pattern %s", tar.IndexFilterPatterns[j])
 			return
 		}
 	}
@@ -137,9 +137,9 @@ func CompilePatterns(feedTar *FeedTarget, tar *TargetConfig) (err error) {
 		if "" == strings.TrimSpace(tar.ContentPatterns[j]) {
 			continue
 		}
-		feedTar.ContentFilterRegs[j], err = regexp.Compile(PatternToRegex(tar.ContentPatterns[j]))
+		feedTar.ContentFilterRegs[j], err = regexp.Compile(PatternToRegex(tar.ContentFilterPatterns[j]))
 		if nil != err {
-			log.Printf("[ERROR] error compiling content filter pattern %s", tar.ContentPatterns[j])
+			log.Printf("[ERROR] error compiling content filter pattern %s", tar.ContentFilterPatterns[j])
 			return
 		}
 	}

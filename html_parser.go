@@ -59,28 +59,38 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 		htmlData := MinifyHtml(indexCache.Html)
 
 		// extract feed entry title and link
-		for _, indexReg := range FindIndexRegs(feedTar, tarURL) {
+		indRegs := FindIndexRegs(feedTar, tarURL)
+		for ind, indexReg := range indRegs {
 			if nil == indexReg {
-				log.Printf("[ERROR] cannot find index regex for %s", tarURL.String)
+				log.Printf("[ERROR] cannot find index regex for %s", tarURL.String())
 				continue
+			}
+
+			// make a copy of source data
+			var htmlDataCopy []byte
+			if ind+1 == len(indRegs) {
+				htmlDataCopy = htmlData
+			} else {
+				htmlDataCopy = make([]byte, len(htmlData))
+				copy(htmlDataCopy, htmlData)
 			}
 
 			// filter html with index filter
 			indexFilterReg := FindIndexFilterReg(feedTar, indexReg)
 			if nil != indexFilterReg {
-				htmlData := RegexpFilter(indexFilterReg, htmlData)
-				if nil == htmlData {
+				htmlDataCopy = RegexpFilter(indexFilterReg, htmlDataCopy)
+				if nil == htmlDataCopy {
 					// failed to filter htmlData
 					continue
 				}
 			}
 
-			matches := indexReg.FindAllSubmatch(htmlData, -1)
+			matches := indexReg.FindAllSubmatch(htmlDataCopy, -1)
 			if nil == matches {
 				log.Printf("[ERROR] failed to match index html %s, pattern %s did not match", tarURL.String(), indexReg.String())
 				if *gDebug {
 					log.Println("======= debug: target html data =======")
-					log.Println(string(htmlData))
+					log.Println(string(htmlDataCopy))
 					log.Println("==============")
 				}
 				// ignore this
