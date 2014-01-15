@@ -68,6 +68,21 @@ func FindContentReg(feedTar *FeedTarget, feedURL *url.URL) *regexp.Regexp {
 	return nil
 }
 
+func FindPubDate(feedTar *FeedTarget, feedURL *url.URL) string {
+	pubDateNum := len(feedTar.PubDateFormats)
+	if 0 == pubDateNum {
+		return ""
+	} else if 1 == pubDateNum {
+		return feedTar.PubDateFormats[0]
+	}
+	for i := 0; i < len(feedTar.URLs); i++ {
+		if feedTar.URLs[i] == feedURL {
+			return feedTar.PubDateFormats[i]
+		}
+	}
+	return ""
+}
+
 // parse http Cache-Control response header
 func ExtractMaxAge(cacheCtl string) (maxAge time.Duration) {
 	for _, str := range strings.Split(cacheCtl, ",") {
@@ -92,3 +107,63 @@ func ExtractMaxAge(cacheCtl string) (maxAge time.Duration) {
 // get response http header
 //func ExtractHttpResponseHeader(headers http.Header, headerName string) string {
 //}
+
+func ParsePubDate(formatStr, dateStr string) (time.Time, error) {
+	pubdateValue := strings.TrimSpace(dateStr)
+	pubDate, err := time.Parse(formatStr, pubdateValue)
+	if nil != err {
+		log.Printf("[ERROR] error parsing pubdate: %s, format is %s, real value is %s",
+			err,
+			formatStr,
+			pubdateValue,
+		)
+		return time.Time{}, err
+	} else {
+		return time.Date(
+			pubDate.Year(), pubDate.Month(), pubDate.Day(),
+			pubDate.Hour(), pubDate.Minute(), pubDate.Second(), pubDate.Nanosecond(),
+			GOFEED_DEFAULT_TIMEZONE,
+		), nil
+	}
+}
+
+func RemoveDuplicatEntries(feed *Feed) bool {
+	if nil == feed {
+		return false
+	}
+
+	entryMap := make(map[string]bool)
+	newEntries := make([]*FeedEntry, 1)
+	newEntryInd := 0
+
+	for _, entry := range feed.Entries {
+		link := entry.Link.String()
+		if !entryMap[link] {
+			entryMap[link] = true
+			newEntries = append(newEntries[:newEntryInd], entry)
+			newEntryInd += 1
+		} else {
+			log.Printf("[WARN] removed duplicate feed entry %s", entry.Link.String())
+		}
+	}
+
+	feed.Entries = newEntries
+
+	return true
+}
+
+func SetPubDates(feed *Feed) {
+	for _, entry := range feed.Entries {
+		if nil != entry.PubDate {
+			continue
+		} else if nil != entry.Cache.LastModified {
+			entry.PubDate = entry.Cache.LastModified
+		} else if nil != entry.Cache.Date {
+			entry.PubDate = entry.Cache.Date
+		} else {
+			log.Printf("[ERROR] entry's cache date is nil %s", entry.Link.String())
+			now := time.Now()
+			entry.PubDate = &now
+		}
+	}
+}

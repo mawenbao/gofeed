@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"log"
-	"net/http"
 	"time"
 )
 
@@ -17,13 +16,15 @@ func FeedEntryToRss2Item(entry *FeedEntry) (item Rss2Item) {
 	item.Title = entry.Title
 	item.Link = entry.Link.String()
 	item.Description = string(entry.Content)
-	if nil != entry.Cache.LastModified {
-		item.PubDate = entry.Cache.LastModified.Format(http.TimeFormat)
+	if nil != entry.PubDate {
+		item.PubDate = entry.PubDate.Format(time.RFC1123Z)
+	} else if nil != entry.Cache.LastModified {
+		item.PubDate = entry.Cache.LastModified.Format(time.RFC1123Z)
 	} else if nil != entry.Cache.Date {
-		item.PubDate = entry.Cache.Date.Format(http.TimeFormat)
+		item.PubDate = entry.Cache.Date.Format(time.RFC1123Z)
 	} else {
 		log.Printf("[ERROR] entry's cache date is nil %s", entry.Link.String())
-		item.PubDate = time.Now().Format(http.TimeFormat)
+		item.PubDate = time.Now().Format(time.RFC1123Z)
 	}
 	item.Guid = entry.Link.String()
 
@@ -42,7 +43,7 @@ func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
 		Title:       feed.Title,
 		Link:        feed.URL.String(),
 		Description: "",
-		PubDate:     feed.LastModified.Format(http.TimeFormat),
+		PubDate:     feed.LastModified.Format(time.RFC1123Z),
 		Generator:   GOFEED_NAME + " " + GOFEED_VERSION,
 	}
 
@@ -53,8 +54,8 @@ func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
 			log.Println("[ERROR] got nil entry at index %d", entryInd)
 		} else if nil == entry.Link || nil == entry.Cache {
 			log.Println("[WARN] Ignore invalid feed entry: link or cache is nil")
-		} else if 0 == len(entry.Content) && !*gKeepEmptyEntry {
-			log.Printf("Ignore empty feed entry %s", entry.Link.String())
+		} else if 0 == len(entry.Content) {
+			log.Printf("[WARN] Ignore empty feed entry %s", entry.Link.String())
 		} else {
 			rss2Feed.Channel.Items = append(rss2Feed.Channel.Items[:itemInd], FeedEntryToRss2Item(entry))
 			itemInd += 1

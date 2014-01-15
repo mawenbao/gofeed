@@ -5,16 +5,18 @@
         {
             "Feed.Title": "虎嗅全文",
             "Feed.URL": ["http://www.huxiu.com/rss/0.xml"],
-            "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>"],
+            "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>{any}<pubDate>{pubdate}</pubDate>"],
             "Feed.ContentPattern": ["<div{any}id=\"neirong_box\"{any}<table>{any}<div>{description}<!--"],
+            "Feed.PubDateFormat": ["Mon, 02 Jan 2006 15:04:05 -0700"],
             "Feed.Path": "huxiu.xml",
             "Request.Interval": 5
         },
         {
             "Feed.Title": "阅读时光",
             "Feed.URL": ["http://www.timetimetime.net"],
-            "Feed.IndexPattern": ["<div class=\"left_contant_title\">{any}(经典语录|阅读生活){any}<a href=\"{link}\"{any}>{title}</a>"],
-            "Feed.ContentPattern": ["<div class=\"neiz1 a7\">{any}</div>{description}</div>"],
+            "Feed.IndexPattern": ["<div class=\"left_contant_title\">{any}(经典语录|阅读生活|另一面|读好书){any}<a href=\"{link}\"{any}>{title}</a>"],
+            "Feed.ContentPattern": ["</h1><div{any}<span{any}>{pubdate}<span{any}<div class=\"neiz1 a7\">{any}</div>{description}</div>"],
+            "Feed.PubDateFormat": ["2006-01-02 15:04"],
             "Feed.Path": "timetimetime.xml",
             "Request.Interval": 5 
         },

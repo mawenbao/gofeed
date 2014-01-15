@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"sort"
 	"sync"
 )
 
@@ -16,7 +17,6 @@ var (
 	gCPUNum            = flag.Int("c", runtime.NumCPU(), "number of cpus to run simultaneously")
 	gLogfile           = flag.String("l", "", "path of the log file")
 	gAlwaysUseCache    = flag.Bool("a", false, "use cache if failed to download web page")
-	gKeepEmptyEntry    = flag.Bool("k", false, "keep feed entries which do not have any description")
 	gGzipCompressLevel = flag.Int("z", 9, "compression level when saving html cache with gzip in the cache database.\n\t0-9 acceptable where 0 means no compression")
 	gVersion           = flag.Bool("version", false, "print gofeed version")
 )
@@ -47,7 +47,7 @@ func main() {
 	if *gCPUNum > runtime.NumCPU() {
 		log.Printf("[WARN] cpu number %d too big, wil be set to actual number of your cpus: %d", *gCPUNum, runtime.NumCPU())
 		*gCPUNum = runtime.NumCPU()
-        runtime.GOMAXPROCS(*gCPUNum)
+		runtime.GOMAXPROCS(*gCPUNum)
 	}
 
 	if *gGzipCompressLevel < 0 || *gGzipCompressLevel > 9 {
@@ -103,10 +103,19 @@ func main() {
 				log.Printf("[ERROR] failed to parse feed target %s", feedTar.FeedPath)
 			}
 
+			// remove duplicate entries(by link)
+			RemoveDuplicatEntries(feed)
+
 			// parse feed entry description
 			if !ParseContentHtml(feedTar, feed) {
 				log.Printf("[ERROR] failed to parse content html for feed target %s", feedTar.FeedPath)
 			}
+
+			// fill empty pubdates
+			SetPubDates(feed)
+
+			// sort feed entries on pubdatet desc
+			sort.Sort(sort.Reverse(FeedEntriesSortByPubDate(feed.Entries)))
 
 			// generate rss2 feed
 			rss2FeedStr, err := GenerateRss2Feed(feed)

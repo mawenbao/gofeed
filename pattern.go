@@ -13,11 +13,15 @@ func PatternToRegex(pat string) string {
 		PATTERN_ANY, PATTERN_ANY_REG,
 		PATTERN_TITLE, PATTERN_TITLE_REG,
 		PATTERN_LINK, PATTERN_LINK_REG,
-		PATTERN_CONTENT, PATTERN_CONTENT_REG)
+		PATTERN_CONTENT, PATTERN_CONTENT_REG,
+		PATTERN_PUBDATE, PATTERN_PUBDATE_REG,
+	)
 
 	return r.Replace(pat)
 }
 
+// IndexPattern must contain both {title} and {link}, and maybe {pubdate}
+// ContentPattern must contain {content}, and maybe {pubdate}
 func CheckPatterns(tar *TargetConfig) bool {
 	if nil == tar {
 		log.Printf("[ERROR] invliad target, nil")

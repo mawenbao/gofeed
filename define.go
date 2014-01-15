@@ -11,7 +11,7 @@ import (
 
 const (
 	GOFEED_NAME    = "gofeed"
-	GOFEED_VERSION = "0.1.1"
+	GOFEED_VERSION = "0.1.2"
 	GOFEED_PROJECT = "https://github.com/mawenbao/gofeed"
 
 	// used to normalize urls
@@ -38,7 +38,11 @@ const (
 
 	CONTENT_NAME        = "description"
 	PATTERN_CONTENT     = "{" + CONTENT_NAME + "}"
-	PATTERN_CONTENT_REG = "(?P<" + CONTENT_NAME + ">(?s).*?)"
+	PATTERN_CONTENT_REG = `(?P<` + CONTENT_NAME + `>(?s).*?)`
+
+	PUBDATE_NAME        = "pubdate"
+	PATTERN_PUBDATE     = "{" + PUBDATE_NAME + "}"
+	PATTERN_PUBDATE_REG = `(?P<` + PUBDATE_NAME + `>(?s).*?)`
 
 	PATTERN_ANY     = "{any}"
 	PATTERN_ANY_REG = "(?s).*?"
@@ -62,6 +66,9 @@ var (
 	HTML_WHITESPACE_REGEX2 = regexp.MustCompile(`\s+<`)
 	HTML_WHITESPACE_REPL   = []byte(">")
 	HTML_WHITESPACE_REPL2  = []byte("<")
+
+	// time related stuff
+	GOFEED_DEFAULT_TIMEZONE, _ = time.LoadLocation("Asia/Shanghai")
 )
 
 type Config struct {
@@ -76,33 +83,36 @@ type TargetConfig struct {
 	URLs            []string      `json:"Feed.URL"`
 	IndexPatterns   []string      `json:"Feed.IndexPattern"`
 	ContentPatterns []string      `json:"Feed.ContentPattern"`
+	PubDateFormats  []string      `json:"Feed.PubDateFormat"`
 	FeedPath        string        `json:"Feed.Path"`
 	ReqInterval     time.Duration `json:"Request.Interval"`
 }
 
 type FeedTarget struct {
-	Title         string
-	Description   string
-	URLs          []*url.URL
-	IndexRegs     []*regexp.Regexp
-	ContentRegs   []*regexp.Regexp
-	FeedPath      string
-	ReqInterval   time.Duration
-	CacheDB       string
-	CacheLifetime time.Duration
+	Title          string
+	Description    string
+	URLs           []*url.URL
+	IndexRegs      []*regexp.Regexp
+	ContentRegs    []*regexp.Regexp
+	FeedPath       string
+	ReqInterval    time.Duration
+	CacheDB        string
+	CacheLifetime  time.Duration
+	PubDateFormats []string
 }
 
 type Feed struct {
 	Title        string
 	Description  string
 	URL          *url.URL   // URL == nil means feed is invalid
-	LastModified *time.Time // cannot be nil
+	LastModified *time.Time // pubDate, cannot be nil
 	Entries      []*FeedEntry
 }
 
 type FeedEntry struct {
 	Title   string
-	Link    *url.URL   // Link == nil means entry is invalid
+	Link    *url.URL // Link == nil means entry is invalid
+	PubDate *time.Time
 	Content []byte     // entry description
 	Cache   *HtmlCache // Cache == nil means entry is invalid
 }

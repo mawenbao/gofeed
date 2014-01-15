@@ -100,6 +100,13 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 			log.Fatalf("failed to compile index/content patterns for feed target %s: %s", feedTar.FeedPath, err)
 		}
 
+		// check pubdate format
+		pubDateNum := len(tar.PubDateFormats)
+		if 0 != pubDateNum && 1 != pubDateNum && len(tar.URLs) != pubDateNum {
+			log.Fatalf("failed to parse pubdate formats, number of pubdate should be 0 or 1 or the same as Feed.URL")
+		}
+		feedTar.PubDateFormats = tar.PubDateFormats
+
 		// normalize url
 		if 0 == len(tar.URLs) {
 			log.Fatalf("no urls for %s", tar.FeedPath)

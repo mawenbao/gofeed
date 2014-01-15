@@ -75,6 +75,7 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 			// ignore this
 			continue
 		}
+
 		entries := make([]*FeedEntry, len(matches))
 		for matchInd, match := range matches {
 			entries[matchInd] = new(FeedEntry)
@@ -88,6 +89,14 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 					entry.Link, err = tarURL.Parse(string(match[patInd]))
 					if nil != err {
 						log.Printf("[ERROR] error parsing entry link %s: %s", entry.Link, err)
+					}
+				case PUBDATE_NAME:
+					var pubDate time.Time
+					pubDate, err = ParsePubDate(FindPubDate(feedTar, tarURL), string(match[patInd]))
+					if nil != err {
+						log.Printf("[ERROR] error parsing pubdate of link %s: %s", entry.Link, err)
+					} else {
+						entry.PubDate = &pubDate
 					}
 				}
 			}
@@ -123,6 +132,8 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 		return
 	}
 
+	validEntries := make([]*FeedEntry, 1)
+	validEntryInd := 0
 	for entryInd, entry := range feed.Entries {
 		// check entry link
 		if nil == entry.Link {
@@ -138,9 +149,12 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 
 		cache, err := FetchHtml(entry.Link, feedTar.CacheDB, feedTar.CacheLifetime)
 		if nil == cache || nil != err {
-			log.Printf("[ERROR] failed to download web page %s", entry.Link.String())
+			log.Printf("[ERROR] failed to download web page %s, will remove this entry", entry.Link.String())
 			// ignore this entry, entry.Cache = nil
 			continue
+		} else {
+			validEntries = append(validEntries[:validEntryInd], entry)
+			validEntryInd += 1
 		}
 		entry.Cache = cache
 
@@ -158,9 +172,18 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 			// ignore this sucker
 			continue
 		}
-		for i, patName := range contentReg.SubexpNames() {
-			if CONTENT_NAME == patName {
-				entry.Content = match[i]
+		for patInd, patName := range contentReg.SubexpNames() {
+			switch patName {
+			case CONTENT_NAME:
+				entry.Content = match[patInd]
+			case PUBDATE_NAME:
+				var pubDate time.Time
+				pubDate, err = ParsePubDate(FindPubDate(feedTar, feed.URL), string(match[patInd]))
+				if nil != err {
+					log.Printf("[ERROR] error parsing pubdate of link %s", entry.Link, err)
+				} else {
+					entry.PubDate = &pubDate
+				}
 			}
 		}
 
@@ -169,6 +192,8 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 			log.Printf("[WARN] feed entry has no description: %s", entry.Link.String())
 		}
 	}
+
+	feed.Entries = validEntries
 
 	return true
 }
