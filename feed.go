@@ -51,7 +51,7 @@ func GenerateRss2Feed(feed *Feed) (rss2FeedStr []byte, err error) {
 	itemInd := 0
 	for entryInd, entry := range feed.Entries {
 		if nil == entry {
-			log.Println("[ERROR] got nil entry at index %d", entryInd)
+			log.Printf("[ERROR] got nil entry at index %d", entryInd)
 		} else if nil == entry.Link || nil == entry.Cache {
 			log.Println("[WARN] Ignore invalid feed entry: link or cache is nil")
 		} else if 0 == len(entry.Content) {

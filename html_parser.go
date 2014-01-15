@@ -59,51 +59,65 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 		htmlData := MinifyHtml(indexCache.Html)
 
 		// extract feed entry title and link
-		indexReg := FindIndexReg(feedTar, tarURL)
-		if nil == indexReg {
-			log.Printf("[ERROR] cannot find index regex for %s", tarURL.String)
-			continue
-		}
-		matches := indexReg.FindAllSubmatch(htmlData, -1)
-		if nil == matches {
-			log.Printf("[ERROR] failed to match index html %s, pattern %s did not match", tarURL.String(), indexReg.String())
-			if *gDebug {
-				log.Println("======= debug: target html data =======")
-				log.Println(string(htmlData))
-				log.Println("==============")
+		for _, indexReg := range FindIndexRegs(feedTar, tarURL) {
+			if nil == indexReg {
+				log.Printf("[ERROR] cannot find index regex for %s", tarURL.String)
+				continue
 			}
-			// ignore this
-			continue
-		}
 
-		entries := make([]*FeedEntry, len(matches))
-		for matchInd, match := range matches {
-			entries[matchInd] = new(FeedEntry)
-			entry := entries[matchInd] // pointer of FeedEntry
-			for patInd, patName := range indexReg.SubexpNames() {
-				switch patName {
-				case TITLE_NAME:
-					entry.Title = string(match[patInd])
-				case LINK_NAME:
-					// normalize entry link which may be relative
-					entry.Link, err = tarURL.Parse(string(match[patInd]))
-					if nil != err {
-						log.Printf("[ERROR] error parsing entry link %s: %s", entry.Link, err)
-					}
-				case PUBDATE_NAME:
-					var pubDate time.Time
-					pubDate, err = ParsePubDate(FindPubDate(feedTar, tarURL), string(match[patInd]))
-					if nil != err {
-						log.Printf("[ERROR] error parsing pubdate of link %s: %s", entry.Link, err)
-					} else {
-						entry.PubDate = &pubDate
+			// filter html with index filter
+			indexFilterReg := FindIndexFilterReg(feedTar, indexReg)
+			if nil != indexFilterReg {
+				htmlData := RegexpFilter(indexFilterReg, htmlData)
+				if nil == htmlData {
+					// failed to filter htmlData
+					continue
+				}
+			}
+
+			matches := indexReg.FindAllSubmatch(htmlData, -1)
+			if nil == matches {
+				log.Printf("[ERROR] failed to match index html %s, pattern %s did not match", tarURL.String(), indexReg.String())
+				if *gDebug {
+					log.Println("======= debug: target html data =======")
+					log.Println(string(htmlData))
+					log.Println("==============")
+				}
+				// ignore this
+				continue
+			}
+
+			entries := make([]*FeedEntry, len(matches))
+			for matchInd, match := range matches {
+				entries[matchInd] = new(FeedEntry)
+				entry := entries[matchInd] // pointer of FeedEntry
+				entry.IndexPattern = indexReg
+				for patInd, patName := range indexReg.SubexpNames() {
+					switch patName {
+					case TITLE_NAME:
+						entry.Title = string(match[patInd])
+					case LINK_NAME:
+						// normalize entry link which may be relative
+						entry.Link, err = tarURL.Parse(string(match[patInd]))
+						if nil != err {
+							log.Printf("[ERROR] error parsing entry link %s: %s", entry.Link, err)
+						}
+					case PUBDATE_NAME:
+						var pubDate time.Time
+						pubDate, err = ParsePubDate(FindPubDate(feedTar, tarURL), string(match[patInd]))
+						if nil != err {
+							log.Printf("[ERROR] error parsing pubdate of link %s: %s", entry.Link, err)
+						} else {
+							entry.PubDate = &pubDate
+						}
 					}
 				}
 			}
+
+			// add entries to feed
+			feed.Entries = append(feed.Entries, entries...)
 		}
 
-		// set feed
-		feed.Entries = append(feed.Entries, entries...)
 		if 0 == urlInd {
 			feed.Title = feedTar.Title
 			feed.Description = feedTar.Description
@@ -126,15 +140,20 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 }
 
 func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
-	contentReg := FindContentReg(feedTar, feed.URL)
-	if nil == contentReg {
-		log.Printf("[ERROR] failed to find content regex for %s", feed.URL.String())
-		return
-	}
-
 	validEntries := make([]*FeedEntry, 1)
 	validEntryInd := 0
 	for entryInd, entry := range feed.Entries {
+		if nil == entry {
+			log.Printf("[ERROR] failed to parse content html: entry is nil")
+			continue
+		}
+
+		contentReg := FindContentReg(feedTar, feed.URL, entry.IndexPattern)
+		if nil == contentReg {
+			log.Printf("[ERROR] failed to find content regex for entry %s", entry.Link.String())
+			return
+		}
+
 		// check entry link
 		if nil == entry.Link {
 			log.Printf("[ERROR] entry link is nil, ignore this. entry index is %d", entryInd)
@@ -159,6 +178,16 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 		entry.Cache = cache
 
 		htmlData := MinifyHtml(cache.Html)
+
+		// filter html with content filter
+		contFilterReg := FindContentFilterReg(feedTar, contentReg)
+		if nil != contFilterReg {
+			htmlData := RegexpFilter(contFilterReg, htmlData)
+			if nil == htmlData {
+				// failed to filter htmlData
+				continue
+			}
+		}
 
 		// extract feed entry content(description)
 		match := contentReg.FindSubmatch(htmlData)

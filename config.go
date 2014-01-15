@@ -95,7 +95,7 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 		}
 
 		// compile patterns
-		err = CompileIndexContentPatterns(feedTar, tar)
+		err = CompilePatterns(feedTar, tar)
 		if nil != err {
 			log.Fatalf("failed to compile index/content patterns for feed target %s: %s", feedTar.FeedPath, err)
 		}

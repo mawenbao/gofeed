@@ -52,11 +52,11 @@ See `example_config.json` and `example_config2.json`.
 
 And you should note that
 
-1. There should be as many Feed.URL as Feed.IndexPattern. If array length of the two does not match, there should be only one Feed.IndexPattern, which means all the Feed.URL will share the same Feed.IndexPattern. Otherwise, an configuration parse error will return. 
+1. There should be as many Feed.URL as Feed.IndexPattern. If array length of the two does not match, there should be only one Feed.IndexPattern or only one Feed.URL, which means all the Feed.URL will share the same Feed.IndexPattern or all the Feed.IndexPattern share the same Feed.URL. Otherwise, an configuration parse error will return. 
 
-    And the same goes for Feed.ContentPattern and Feed.PubDateFormat.
+2. For Feed.ContentPattern, there should be as many Feed.URL as Feed.ContentPattern. If array length of the two does not match, there should be only one Feed.ContentPattern, which means all the Feed.URL will share the same Feed.ContentPattern. And the same goes for Feed.PubDateFormat.
 
-2. Both Feed.IndexPattern and Feed.ContentPattern can contain {pubdate} pattern, and if {pubdate} exists in both, gofeed will use the Feed.ContentPattern's.
+3. Both Feed.IndexPattern and Feed.ContentPattern can contain {pubdate} pattern, and if {pubdate} exists in both, gofeed will use the Feed.ContentPattern's.
 
 ### Predefined patterns
 You can use the following predefined patterns in `Feed.IndexPattern` and `Feed.ContentPattern` of the json configuration. Note that all these patterns are **lazy** and perform **leftmost** match, which means they will match as few characters as possible.

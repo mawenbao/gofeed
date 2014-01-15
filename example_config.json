@@ -40,7 +40,11 @@
         {
             "Feed.Title": "南方周末",
             "Feed.URL": ["http://www.infzm.com/"],
-            "Feed.IndexPattern": ["<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>"],
+            "Feed.IndexPattern": [
+                "<div class=\"header\">(热点新闻|生活|专栏){any}<article>{any}<section class=\"text\">{any}<h3><a{any}href=\"{link}\"{any}>{title}</a>", 
+                "<li><a href=\"{link}\"{any}>{title}</a>"
+            ],
+            "Feed.IndexFilterPattern": ["", "<div id=\"Top10\"{any}<ul{any}>{filter}</ul>"],
             "Feed.ContentPattern": ["<em class=\"pubTime\">(最后更新：)?{pubdate}</em>{any}id=\"articleContent\">{description}(<!--|</section>)"],
             "Feed.PubDateFormat": ["2006-01-02 15:04:05"],
             "Feed.Path": "nanfangzhoumo.xml",

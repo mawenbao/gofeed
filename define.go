@@ -44,6 +44,10 @@ const (
 	PATTERN_PUBDATE     = "{" + PUBDATE_NAME + "}"
 	PATTERN_PUBDATE_REG = `(?P<` + PUBDATE_NAME + `>(?s).*?)`
 
+	FILTER_NAME        = "filter"
+	PATTERN_FILTER     = "{" + FILTER_NAME + "}"
+	PATTERN_FILTER_REG = `(?P<` + FILTER_NAME + `>(?s).+?)`
+
 	PATTERN_ANY     = "{any}"
 	PATTERN_ANY_REG = "(?s).*?"
 
@@ -78,27 +82,31 @@ type Config struct {
 }
 
 type TargetConfig struct {
-	Title           string        `json:"Feed.Title"`
-	Description     string        `json:"Feed.Description"`
-	URLs            []string      `json:"Feed.URL"`
-	IndexPatterns   []string      `json:"Feed.IndexPattern"`
-	ContentPatterns []string      `json:"Feed.ContentPattern"`
-	PubDateFormats  []string      `json:"Feed.PubDateFormat"`
-	FeedPath        string        `json:"Feed.Path"`
-	ReqInterval     time.Duration `json:"Request.Interval"`
+	Title                 string        `json:"Feed.Title"`
+	Description           string        `json:"Feed.Description"`
+	URLs                  []string      `json:"Feed.URL"`
+	IndexPatterns         []string      `json:"Feed.IndexPattern"`
+	ContentPatterns       []string      `json:"Feed.ContentPattern"`
+	IndexFilterPatterns   []string      `json:"Feed.IndexFilterPattern"`
+	ContentFilterPatterns []string      `json:"Feed.ContentFilterPattern"`
+	PubDateFormats        []string      `json:"Feed.PubDateFormat"`
+	FeedPath              string        `json:"Feed.Path"`
+	ReqInterval           time.Duration `json:"Request.Interval"`
 }
 
 type FeedTarget struct {
-	Title          string
-	Description    string
-	URLs           []*url.URL
-	IndexRegs      []*regexp.Regexp
-	ContentRegs    []*regexp.Regexp
-	FeedPath       string
-	ReqInterval    time.Duration
-	CacheDB        string
-	CacheLifetime  time.Duration
-	PubDateFormats []string
+	Title             string
+	Description       string
+	URLs              []*url.URL
+	IndexRegs         []*regexp.Regexp
+	ContentRegs       []*regexp.Regexp
+	IndexFilterRegs   []*regexp.Regexp
+	ContentFilterRegs []*regexp.Regexp
+	FeedPath          string
+	ReqInterval       time.Duration
+	CacheDB           string
+	CacheLifetime     time.Duration
+	PubDateFormats    []string
 }
 
 type Feed struct {
@@ -110,11 +118,12 @@ type Feed struct {
 }
 
 type FeedEntry struct {
-	Title   string
-	Link    *url.URL // Link == nil means entry is invalid
-	PubDate *time.Time
-	Content []byte     // entry description
-	Cache   *HtmlCache // Cache == nil means entry is invalid
+	IndexPattern *regexp.Regexp
+	Title        string
+	Link         *url.URL // Link == nil means entry is invalid
+	PubDate      *time.Time
+	Content      []byte     // entry description
+	Cache        *HtmlCache // Cache == nil means entry is invalid
 }
 
 type Rss2Feed struct {
