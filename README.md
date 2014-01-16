@@ -46,8 +46,10 @@ See `example_config.json` and `example_config2.json`.
     *  Feed.Title: (string) title of the rss2 feed channel. If not defined, feed title will be the filename of Feed.Path.
     *  Feed.Description: (string) description of the rss2 feed channel. In not defined, feed description will be empty.
     *  Feed.URL: (array of strings) array of urls, used to define urls of the target's index pages. Note that this url can be html or xml or anything that you can extract feed entry titles and links with regex patterns.
-    *  Feed.IndexPattern: (array of strings) array of index patterns, used to extract entry link and entry title from the index page.
-    *  Feed.ContentPattern: (array of strings) array of content patterns, used to extract entry description from the entry's content page(identified by entry's link).
+    *  Feed.IndexFilterPattern: (array of strings) array of index filter patterns, used to filter valid index html from the entire html.
+    *  Feed.IndexPattern: (array of strings) array of index patterns, used to extract entry link and entry title from the filtered content by Feed.IndexFilterPattern.
+    *  Feed.ContentFilterPattern: (array of strings) array of content patterns, used to extract valid content html from the entire html identified by {link}.
+    *  Feed.ContentPattern: (array of strings) array of content patterns, used to extract entry description from the entry's filtered html content by Feed.ContentFilterPattern.
     *  Feed.PubDateFormat: (string) string format of publish date, see these [predefined format constants](http://golang.org/pkg/time/#pkg-constants) for example.
 
 And you should note that
@@ -66,6 +68,7 @@ You can use the following predefined patterns in `Feed.IndexPattern` and `Feed.C
 *  {link}: hyper link of feed entry, matched against the Feed.URL page
 *  {description}: full-text description of feed entry, matched against the corresponding {link} page
 *  {pubdate}: publish date of feed entry
+*  {filter}: filtered content, used in Feed.IndexFilterPattern or Feed.ContentFilterPattern
 
 ### Custom regular expressions
 You can also write custom regex in `Feed.IndexPattern` and `Feed.ContentPattern`. Make sure there are no predefined patterns in your custom regular expressions. The regex syntax documentation can be found [here](https://code.google.com/p/re2/wiki/Syntax).
