@@ -11,7 +11,7 @@ import (
 
 const (
 	GOFEED_NAME    = "gofeed"
-	GOFEED_VERSION = "0.1.2"
+	GOFEED_VERSION = "0.1.3"
 	GOFEED_PROJECT = "https://github.com/mawenbao/gofeed"
 
 	// used to normalize urls
