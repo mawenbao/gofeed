@@ -114,6 +114,9 @@ func main() {
 			// fill empty pubdates
 			SetPubDates(feed)
 
+			// remove junk code in entry content
+			RemoveJunkContent(feed)
+
 			// sort feed entries on pubdatet desc
 			sort.Sort(sort.Reverse(FeedEntriesSortByPubDate(feed.Entries)))
 

@@ -71,6 +71,9 @@ var (
 	HTML_WHITESPACE_REPL   = []byte(">")
 	HTML_WHITESPACE_REPL2  = []byte("<")
 
+	// used for removing junk entry content
+	HTML_SCRIPT_TAG = regexp.MustCompile(`<script(?s).*?</script>`)
+
 	// time related stuff
 	GOFEED_DEFAULT_TIMEZONE, _ = time.LoadLocation("Asia/Shanghai")
 )

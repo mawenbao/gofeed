@@ -224,3 +224,18 @@ func SetPubDates(feed *Feed) {
 		}
 	}
 }
+
+// remove the following tags in entry content
+// <script>
+func RemoveJunkContent(feed *Feed) {
+	for _, entry := range feed.Entries {
+		if nil == entry {
+			log.Printf("[ERROR] failed to remove junk content: entry is nil")
+			return
+		}
+
+		if nil != entry.Content && len(entry.Content) > 0 {
+			entry.Content = HTML_SCRIPT_TAG.ReplaceAll(entry.Content, []byte(""))
+		}
+	}
+}
