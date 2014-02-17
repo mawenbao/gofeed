@@ -87,6 +87,11 @@ func main() {
 		}
 	} else {
 		log.Printf("found cache database %s", cacheDB)
+		// remove expired cache entries
+		log.Printf("scanning cache db for expired entries...")
+		if feedTargets[0].CacheLifetime > 0 {
+			RemoveExpiredCache(cacheDB, feedTargets[0].CacheLifetime)
+		}
 	}
 
 	var wg sync.WaitGroup

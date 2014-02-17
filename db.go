@@ -327,3 +327,22 @@ func UpdateHtmlCache(dbPath string, caches []*HtmlCache) (err error) {
 	}
 	return
 }
+
+func RemoveExpiredCache(dbPath string, cacheLifeTime time.Duration) (err error) {
+	sqlLoadCache := fmt.Sprintf("SELECT url, date, cache_control, lastmod, etag, expires, html FROM %s", DB_HTML_CACHE_TABLE)
+	caches, err := ExecQuerySQL(dbPath, -1, sqlLoadCache)
+	if nil != err {
+		log.Printf("[ERROR] failed to load cache from cache db %s: %s", dbPath, err)
+		return
+	}
+
+	for _, c := range caches {
+		if c.Date.Add(cacheLifeTime).Before(time.Now()) {
+			if *gVerbose {
+				log.Printf("[WARN] trying to remove expired cache entry %s, date %s", c.URL.String(), c.Date.Format(http.TimeFormat))
+			}
+			DelHtmlCacheByURL(dbPath, c.URL.String())
+		}
+	}
+	return
+}
