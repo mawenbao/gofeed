@@ -1,6 +1,6 @@
 # Gofeed发布历史
 
-## v0.1.4
+## v0.1.4 2014.02.17
 
 * 修复cache里存在超过CacheLifeTime条目的bug。
 
