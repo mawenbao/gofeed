@@ -4,6 +4,9 @@ Gofeed was inspired by feed43.com. It is disigned to extract full-text feeds fro
 
 This simple program was written when I started to learn golang. So I tried to reinvent everything I need, including a simple crawler which took good use of cache and a very simple rss2.0 feed generator.
 
+## Releases
+See [http://dl.atime.me/gofeed](http://dl.atime.me/gofeed).
+
 ## Features
 
 * Like feed43.com, you can extract feed titles, feed links and the feed descriptions from web pages or partial feeds with some predefined patterns and even your custom regular expressions. 
