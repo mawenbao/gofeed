@@ -287,19 +287,19 @@ func SetPubDates(feed *Feed) {
 	}
 }
 
+func MinifyHtml(htmlData []byte) []byte {
+	htmlData = HTML_WHITESPACE_REGEX.ReplaceAll(htmlData, HTML_WHITESPACE_REPL)
+	htmlData = HTML_WHITESPACE_REGEX2.ReplaceAll(htmlData, HTML_WHITESPACE_REPL2)
+	return htmlData
+}
+
 // remove the following tags in entry content
 // <script>
-func RemoveJunkContent(feed *Feed) {
-	for _, entry := range feed.Entries {
-		if nil == entry {
-			log.Printf("[ERROR] failed to remove junk content: entry is nil")
-			return
-		}
-
-		if nil != entry.Content && len(entry.Content) > 0 {
-			entry.Content = HTML_SCRIPT_TAG.ReplaceAll(entry.Content, []byte(""))
-		}
+func RemoveJunkContent(content []byte) []byte {
+	if nil != content && len(content) > 0 {
+		return HTML_SCRIPT_TAG.ReplaceAll(content, []byte(""))
 	}
+	return []byte("")
 }
 
 // generate pre-defined pattern name, PDP is short for Pre-defined Pattern

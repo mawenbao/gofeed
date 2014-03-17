@@ -16,12 +16,6 @@ func ExtractHtmlTitle(htmlData []byte) string {
 	return string(matches[1])
 }
 
-func MinifyHtml(htmlData []byte) []byte {
-	htmlData = HTML_WHITESPACE_REGEX.ReplaceAll(htmlData, HTML_WHITESPACE_REPL)
-	htmlData = HTML_WHITESPACE_REGEX2.ReplaceAll(htmlData, HTML_WHITESPACE_REPL2)
-	return htmlData
-}
-
 func FilterHtmlWithoutPattern(htmlData []byte, pattern string) bool {
 	html := string(htmlData)
 	for _, str := range PATTERN_ALL_REGEX.Split(pattern, -1) {
@@ -56,7 +50,7 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 		}
 
 		// minify html
-		htmlData := MinifyHtml(indexCache.Html)
+		htmlData := MinifyHtml(RemoveJunkContent(indexCache.Html))
 
 		// extract feed entry title and link
 		indRegs := FindIndexRegs(feedTar, tarURL)
@@ -187,7 +181,7 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 		}
 		entry.Cache = cache
 
-		htmlData := MinifyHtml(cache.Html)
+		htmlData := MinifyHtml(RemoveJunkContent(cache.Html))
 
 		// filter html with content filter
 		contFilterReg := FindContentFilterReg(feedTar, contentReg)
