@@ -104,17 +104,17 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 				entry.IndexPattern = indexReg
 				for patInd, patName := range indexReg.SubexpNames() {
 					switch patName {
-					case TITLE_NAME:
+					case PATTERN_TITLE:
 						entry.Title = string(match[patInd])
-					case LINK_NAME:
+					case PATTERN_LINK:
 						// normalize entry link which may be relative
 						entry.Link, err = tarURL.Parse(string(match[patInd]))
 						if nil != err {
 							log.Printf("[ERROR] error parsing entry link %s: %s", entry.Link, err)
 						}
-					case PUBDATE_NAME:
+					case PATTERN_PUBDATE:
 						var pubDate time.Time
-						pubDate, err = ParsePubDate(FindPubDate(feedTar, tarURL), string(match[patInd]))
+						pubDate, err = ParsePubDate(FindPubDateReg(feedTar, feed.URL), string(match[patInd]))
 						if nil != err {
 							log.Printf("[ERROR] error parsing pubdate of link %s: %s", entry.Link, err)
 						} else {
@@ -213,11 +213,11 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 		}
 		for patInd, patName := range contentReg.SubexpNames() {
 			switch patName {
-			case CONTENT_NAME:
+			case PATTERN_CONTENT:
 				entry.Content = match[patInd]
-			case PUBDATE_NAME:
+			case PATTERN_PUBDATE:
 				var pubDate time.Time
-				pubDate, err = ParsePubDate(FindPubDate(feedTar, feed.URL), string(match[patInd]))
+				pubDate, err = ParsePubDate(FindPubDateReg(feedTar, feed.URL), string(match[patInd]))
 				if nil != err {
 					log.Printf("[ERROR] error parsing pubdate of link %s: %s", entry.Link, err)
 				} else {

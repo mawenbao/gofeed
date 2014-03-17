@@ -6,8 +6,9 @@
             "Feed.Title": "mwb's blog",
             "Feed.URL": ["http://blog.atime.me", "blog.atime.me/index2.html"],
             "Feed.IndexPattern": ["<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>", "<div class=\"niu2-index-article-title\"><span><a href=\"{link}\">{title}</a></span></div>"],
-            "Feed.ContentPattern": ["<div class=\"clearfix visible-xs niu2-clearfix\"></div>{description}<div id=\"content-comments\">"],
+            "Feed.ContentPattern": ["<div id=\"niu2-main-content\">{description}<div id=\"content-comments\">{any}<div id=\"niu2-sidebar-meta\"{any}<div class=\"niu2-sidebar-value\">{pubdate}</div>"],
             "Feed.Path": "blog.atime.me.xml",
+            "Feed.PubDatePattern": ["{year}-{month}-{day} {hour}:{minute}:{second}"],
             "Request.Interval": 0
         }
     ]

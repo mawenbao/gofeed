@@ -7,7 +7,7 @@
             "Feed.URL": ["http://www.huxiu.com/rss/0.xml"],
             "Feed.IndexPattern": ["<item><title>{title}</title>{any}<link>{link}</link>{any}<pubDate>{pubdate}</pubDate>"],
             "Feed.ContentPattern": ["<div{any}id=\"neirong_box\"{any}<table>{any}<div>{description}<!--"],
-            "Feed.PubDateFormat": ["Mon, 02 Jan 2006 15:04:05 -0700"],
+            "Feed.PubDatePattern": ["{any}, {day} {month} {year} {hour}:{minute}:{second}"],
             "Feed.Path": "huxiu.xml",
             "Request.Interval": 5
         },
@@ -16,7 +16,7 @@
             "Feed.URL": ["http://www.timetimetime.net"],
             "Feed.IndexPattern": ["<div class=\"left_contant_title\">{any}(经典语录|阅读生活|另一面|读好书){any}<a href=\"{link}\"{any}>{title}</a>"],
             "Feed.ContentPattern": ["</h1><div{any}<span{any}>{pubdate}<span{any}<div class=\"neiz1 a7\">{any}</div>{description}</div>"],
-            "Feed.PubDateFormat": ["2006-01-02 15:04"],
+            "Feed.PubDatePattern": ["{year}-{month}-{day} {hour}:{minute}"],
             "Feed.Path": "timetimetime.xml",
             "Request.Interval": 5 
         },
@@ -25,7 +25,7 @@
             "Feed.URL": ["http://www.hexieshe.com/feed"],
             "Feed.IndexPattern": ["<item><title>{title}</title><link>{link}</link>{any}<pubDate>{pubdate}</pubDate>"],
             "Feed.ContentPattern": ["<article{any}<div class=\"entry\">{description}<div"],
-            "Feed.PubDateFormat": ["Mon, 02 Jan 2006 15:04:05 -0700"],
+            "Feed.PubDatePattern": ["{any}, {day} {month} {year} {hour}:{minute}:{second}"],
             "Feed.Path": "hexieshe.xml",
             "Request.Interval": 5
         },
@@ -53,7 +53,7 @@
                 "<div id=\"t_0\"{any}>{filter}</div>"
             ],
             "Feed.ContentPattern": ["<em class=\"pubTime\">(最后更新：)?{pubdate}</em>{any}id=\"articleContent\">{description}(<!--|</section>)"],
-            "Feed.PubDateFormat": ["2006-01-02 15:04:05"],
+            "Feed.PubDatePattern": ["{year}-{month}-{day} {hour}:{minute}:{second}"],
             "Feed.Path": "nanfangzhoumo.xml",
             "Request.Interval": 5
         }

@@ -11,7 +11,7 @@ import (
 
 const (
 	GOFEED_NAME    = "gofeed"
-	GOFEED_VERSION = "0.1.4"
+	GOFEED_VERSION = "0.1.5"
 	GOFEED_PROJECT = "https://github.com/mawenbao/gofeed"
 
 	// used to normalize urls
@@ -28,28 +28,21 @@ const (
 	CACHE_LIFETIME_ALL_REG = `^([1-9][0-9]*[smhd])+$`
 	CACHE_LIFETIME_REG     = `([1-9][0-9]*)([smhd])`
 
-	TITLE_NAME        = "title"
-	PATTERN_TITLE     = "{" + TITLE_NAME + "}"
-	PATTERN_TITLE_REG = `(?P<` + TITLE_NAME + `>(?s).+?)`
-
-	LINK_NAME        = "link"
-	PATTERN_LINK     = "{" + LINK_NAME + "}"
-	PATTERN_LINK_REG = `(?P<` + LINK_NAME + `>(?s).+?)`
-
-	CONTENT_NAME        = "description"
-	PATTERN_CONTENT     = "{" + CONTENT_NAME + "}"
-	PATTERN_CONTENT_REG = `(?P<` + CONTENT_NAME + `>(?s).*?)`
-
-	PUBDATE_NAME        = "pubdate"
-	PATTERN_PUBDATE     = "{" + PUBDATE_NAME + "}"
-	PATTERN_PUBDATE_REG = `(?P<` + PUBDATE_NAME + `>(?s).*?)`
-
-	FILTER_NAME        = "filter"
-	PATTERN_FILTER     = "{" + FILTER_NAME + "}"
-	PATTERN_FILTER_REG = `(?P<` + FILTER_NAME + `>(?s).+?)`
-
 	PATTERN_ANY     = "{any}"
 	PATTERN_ANY_REG = "(?s).*?"
+
+	PATTERN_TITLE   = "title"
+	PATTERN_LINK    = "link"
+	PATTERN_CONTENT = "description"
+	PATTERN_PUBDATE = "pubdate"
+	PATTERN_FILTER  = "filter"
+
+	PATTERN_YEAR   = "year"
+	PATTERN_MONTH  = "month"
+	PATTERN_DAY    = "day"
+	PATTERN_HOUR   = "hour"
+	PATTERN_MINUTE = "minute"
+	PATTERN_SECOND = "second"
 
 	// db related consts
 	DB_DRIVER           = "sqlite3"
@@ -92,7 +85,7 @@ type TargetConfig struct {
 	ContentPatterns       []string      `json:"Feed.ContentPattern"`
 	IndexFilterPatterns   []string      `json:"Feed.IndexFilterPattern"`
 	ContentFilterPatterns []string      `json:"Feed.ContentFilterPattern"`
-	PubDateFormats        []string      `json:"Feed.PubDateFormat"`
+	PubDatePatterns       []string      `json:"Feed.PubDatePattern"`
 	FeedPath              string        `json:"Feed.Path"`
 	ReqInterval           time.Duration `json:"Request.Interval"`
 }
@@ -105,11 +98,11 @@ type FeedTarget struct {
 	ContentRegs       []*regexp.Regexp
 	IndexFilterRegs   []*regexp.Regexp
 	ContentFilterRegs []*regexp.Regexp
+	PubDateRegs       []*regexp.Regexp
 	FeedPath          string
 	ReqInterval       time.Duration
 	CacheDB           string
 	CacheLifetime     time.Duration
-	PubDateFormats    []string
 }
 
 type Feed struct {

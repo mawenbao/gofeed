@@ -24,7 +24,7 @@ func RegexpFilter(filterReg *regexp.Regexp, data []byte) (outdata []byte) {
 	for _, match := range matches {
 		for patInd, patName := range filterReg.SubexpNames() {
 			switch patName {
-			case FILTER_NAME:
+			case PATTERN_FILTER:
 				outdata = append(outdata, match[patInd]...)
 			}
 		}

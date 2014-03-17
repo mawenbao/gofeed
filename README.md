@@ -53,7 +53,7 @@ See `example_config.json` and `example_config2.json`.
     *  Feed.IndexPattern: (array of strings) array of index patterns, used to extract entry link and entry title from the filtered content by Feed.IndexFilterPattern.
     *  Feed.ContentFilterPattern: (array of strings) array of content patterns, used to extract valid content html from the entire html identified by {link}.
     *  Feed.ContentPattern: (array of strings) array of content patterns, used to extract entry description from the entry's filtered html content by Feed.ContentFilterPattern.
-    *  Feed.PubDateFormat: (string) string format of publish date, see these [predefined format constants](http://golang.org/pkg/time/#pkg-constants) for example.
+    *  Feed.PubDatePattern: (string) pattern of publish date, see pre-defined patterns. Used to extract publish date of an article from the string extracted from {pubdate} pattern.
 
 And you should note that
 
@@ -61,9 +61,9 @@ And you should note that
 
 2. For Feed.ContentPattern, there should be as many Feed.URL as Feed.ContentPattern. If array length of the two does not match, there should be only one Feed.ContentPattern, which means all the Feed.URL will share the same Feed.ContentPattern. And the same goes for Feed.PubDateFormat.
 
-3. Both Feed.IndexPattern and Feed.ContentPattern can contain {pubdate} pattern, and if {pubdate} exists in both, gofeed will use the Feed.ContentPattern's.
+3. Either Feed.IndexPattern or Feed.ContentPattern can contain the {pubdate} pattern, but not both.
 
-### Predefined patterns
+### Pre-defined patterns
 You can use the following predefined patterns in `Feed.IndexPattern` and `Feed.ContentPattern` of the json configuration. Note that all these patterns are **lazy** and perform **leftmost** match, which means they will match as few characters as possible.
 
 *  {any}: match any character including newline
@@ -72,6 +72,15 @@ You can use the following predefined patterns in `Feed.IndexPattern` and `Feed.C
 *  {description}: full-text description of feed entry, matched against the corresponding {link} page
 *  {pubdate}: publish date of feed entry
 *  {filter}: filtered content, used in Feed.IndexFilterPattern or Feed.ContentFilterPattern
+
+Date time format pattern, currently used for publish date string extraced from the {pubdate} pattern:
+
+*  {year}: must be an integer
+*  {month}: must be an integer, Jan or January.
+*  {day}: must be an integer
+*  {hour}: must be an integer
+*  {minute}: must be an integer
+*  {second}: must be an integer
 
 ### Custom regular expressions
 You can also write custom regex in `Feed.IndexPattern` and `Feed.ContentPattern`. Make sure there are no predefined patterns in your custom regular expressions. The regex syntax documentation can be found [here](https://code.google.com/p/re2/wiki/Syntax).

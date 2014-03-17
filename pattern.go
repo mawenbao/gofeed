@@ -11,18 +11,25 @@ import (
 func PatternToRegex(pat string) string {
 	r := strings.NewReplacer(
 		PATTERN_ANY, PATTERN_ANY_REG,
-		PATTERN_TITLE, PATTERN_TITLE_REG,
-		PATTERN_LINK, PATTERN_LINK_REG,
-		PATTERN_CONTENT, PATTERN_CONTENT_REG,
-		PATTERN_PUBDATE, PATTERN_PUBDATE_REG,
-		PATTERN_FILTER, PATTERN_FILTER_REG,
+		GenPDPName(PATTERN_TITLE), GenPDPRegexStr(PATTERN_TITLE, true),
+		GenPDPName(PATTERN_LINK), GenPDPRegexStr(PATTERN_LINK, true),
+		GenPDPName(PATTERN_CONTENT), GenPDPRegexStr(PATTERN_CONTENT, false),
+		GenPDPName(PATTERN_FILTER), GenPDPRegexStr(PATTERN_FILTER, true),
+		GenPDPName(PATTERN_PUBDATE), GenPDPRegexStr(PATTERN_PUBDATE, true),
+		GenPDPName(PATTERN_YEAR), GenPDPRegexStr(PATTERN_YEAR, true),
+		GenPDPName(PATTERN_MONTH), GenPDPRegexStr(PATTERN_MONTH, true),
+		GenPDPName(PATTERN_DAY), GenPDPRegexStr(PATTERN_DAY, true),
+		GenPDPName(PATTERN_HOUR), GenPDPRegexStr(PATTERN_HOUR, true),
+		GenPDPName(PATTERN_MINUTE), GenPDPRegexStr(PATTERN_MINUTE, true),
+		GenPDPName(PATTERN_SECOND), GenPDPRegexStr(PATTERN_SECOND, true),
 	)
 
 	return r.Replace(pat)
 }
 
-// IndexPattern must contain both {title} and {link}, and maybe {pubdate}
-// ContentPattern must contain {content}, and maybe {pubdate}
+// IndexPattern must contain both {title} and {link}
+// ContentPattern must contain {content}
+// Either IndexPattern or ContentPattern may contain {pubdate}, but not both.
 func CheckPatterns(tar *TargetConfig) bool {
 	if nil == tar {
 		log.Printf("[ERROR] invliad target, nil")
@@ -42,8 +49,8 @@ func CheckPatterns(tar *TargetConfig) bool {
 			return false
 		}
 
-		if 1 != strings.Count(indexPat, PATTERN_TITLE) || 1 != strings.Count(indexPat, PATTERN_LINK) {
-			log.Printf("[ERROR] index pattern %s should contain 1 %s and 1 %s ", indexPat, PATTERN_TITLE, PATTERN_LINK)
+		if 1 != strings.Count(indexPat, GenPDPName(PATTERN_TITLE)) || 1 != strings.Count(indexPat, GenPDPName(PATTERN_LINK)) {
+			log.Printf("[ERROR] index pattern %s should contain 1 %s and 1 %s ", indexPat, GenPDPName(PATTERN_TITLE), GenPDPName(PATTERN_LINK))
 			return false
 		}
 	}
@@ -55,13 +62,13 @@ func CheckPatterns(tar *TargetConfig) bool {
 			return false
 		}
 
-		if 1 != strings.Count(contentPat, PATTERN_CONTENT) {
-			log.Printf("[ERROR] content pattern %s should contain 1 %s", contentPat, PATTERN_CONTENT)
+		if 1 != strings.Count(contentPat, GenPDPName(PATTERN_CONTENT)) {
+			log.Printf("[ERROR] content pattern %s should contain 1 %s", contentPat, GenPDPName(PATTERN_CONTENT))
 			return false
 		}
 
-		if strings.Contains(contentPat, PATTERN_TITLE) || strings.Contains(contentPat, PATTERN_LINK) {
-			log.Printf("[ERROR] %s should not contain %s or %s", contentPat, PATTERN_TITLE, PATTERN_LINK)
+		if strings.Contains(contentPat, GenPDPName(PATTERN_TITLE)) || strings.Contains(contentPat, GenPDPName(PATTERN_LINK)) {
+			log.Printf("[ERROR] %s should not contain %s or %s", contentPat, GenPDPName(PATTERN_TITLE), GenPDPName(PATTERN_LINK))
 			return false
 		}
 	}
@@ -77,8 +84,8 @@ func CheckPatterns(tar *TargetConfig) bool {
 		if "" == indFilterPat {
 			continue
 		}
-		if 1 > strings.Count(indFilterPat, PATTERN_FILTER) {
-			log.Printf("[ERROR] index filter pattern %s should be empty or contain more than one %s", indFilterPat, PATTERN_FILTER)
+		if 1 > strings.Count(indFilterPat, GenPDPName(PATTERN_FILTER)) {
+			log.Printf("[ERROR] index filter pattern %s should be empty or contain more than one %s", indFilterPat, GenPDPName(PATTERN_FILTER))
 			return false
 		}
 	}
@@ -87,11 +94,13 @@ func CheckPatterns(tar *TargetConfig) bool {
 		if "" == contFilterPat {
 			continue
 		}
-		if 1 > strings.Count(contFilterPat, PATTERN_FILTER) {
-			log.Printf("[ERROR] content filter pattern %s should be empty or contain more than one %s", contFilterPat, PATTERN_FILTER)
+		if 1 > strings.Count(contFilterPat, GenPDPName(PATTERN_FILTER)) {
+			log.Printf("[ERROR] content filter pattern %s should be empty or contain more than one %s", contFilterPat, GenPDPName(PATTERN_FILTER))
 			return false
 		}
 	}
+
+	//@TODO check pubdate pattern
 
 	return true
 }
@@ -101,6 +110,7 @@ func CompilePatterns(feedTar *FeedTarget, tar *TargetConfig) (err error) {
 	feedTar.ContentRegs = make([]*regexp.Regexp, len(tar.ContentPatterns))
 	feedTar.IndexFilterRegs = make([]*regexp.Regexp, len(tar.IndexFilterPatterns))
 	feedTar.ContentFilterRegs = make([]*regexp.Regexp, len(tar.ContentFilterPatterns))
+	feedTar.PubDateRegs = make([]*regexp.Regexp, len(tar.PubDatePatterns))
 
 	// index pattern
 	for j := 0; j < len(tar.IndexPatterns); j++ {
@@ -140,6 +150,18 @@ func CompilePatterns(feedTar *FeedTarget, tar *TargetConfig) (err error) {
 		feedTar.ContentFilterRegs[j], err = regexp.Compile(PatternToRegex(tar.ContentFilterPatterns[j]))
 		if nil != err {
 			log.Printf("[ERROR] error compiling content filter pattern %s", tar.ContentFilterPatterns[j])
+			return
+		}
+	}
+
+	// publish date pattern
+	for j := 0; j < len(tar.PubDatePatterns); j++ {
+		if "" == strings.TrimSpace(tar.PubDatePatterns[j]) {
+			continue
+		}
+		feedTar.PubDateRegs[j], err = regexp.Compile(PatternToRegex(tar.PubDatePatterns[j]))
+		if nil != err {
+			log.Printf("[ERROR] error compiling publish date pattern %s", tar.PubDatePatterns[j])
 			return
 		}
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"net/url"
@@ -121,21 +122,6 @@ func FindContentFilterReg(feedTar *FeedTarget, contReg *regexp.Regexp) *regexp.R
 	return nil
 }
 
-func FindPubDate(feedTar *FeedTarget, feedURL *url.URL) string {
-	pubDateNum := len(feedTar.PubDateFormats)
-	if 0 == pubDateNum {
-		return ""
-	} else if 1 == pubDateNum {
-		return feedTar.PubDateFormats[0]
-	}
-	for i := 0; i < len(feedTar.URLs); i++ {
-		if feedTar.URLs[i] == feedURL {
-			return feedTar.PubDateFormats[i]
-		}
-	}
-	return ""
-}
-
 // parse http Cache-Control response header
 func ExtractMaxAge(cacheCtl string) (maxAge time.Duration) {
 	for _, str := range strings.Split(cacheCtl, ",") {
@@ -157,27 +143,100 @@ func ExtractMaxAge(cacheCtl string) (maxAge time.Duration) {
 	return
 }
 
-// get response http header
-//func ExtractHttpResponseHeader(headers http.Header, headerName string) string {
-//}
-
-func ParsePubDate(formatStr, dateStr string) (time.Time, error) {
-	pubdateValue := strings.TrimSpace(dateStr)
-	pubDate, err := time.Parse(formatStr, pubdateValue)
-	if nil != err {
-		log.Printf("[ERROR] error parsing pubdate: %s, format is %s, real value is %s",
-			err,
-			formatStr,
-			pubdateValue,
-		)
-		return time.Time{}, err
-	} else {
-		return time.Date(
-			pubDate.Year(), pubDate.Month(), pubDate.Day(),
-			pubDate.Hour(), pubDate.Minute(), pubDate.Second(), pubDate.Nanosecond(),
-			GOFEED_DEFAULT_TIMEZONE,
-		), nil
+func FindPubDateReg(feedTar *FeedTarget, feedURL *url.URL) *regexp.Regexp {
+	pubDateNum := len(feedTar.PubDateRegs)
+	if 0 == pubDateNum {
+		return nil
+	} else if 1 == pubDateNum {
+		return feedTar.PubDateRegs[0]
 	}
+	for i := 0; i < len(feedTar.URLs); i++ {
+		if feedTar.URLs[i] == feedURL {
+			return feedTar.PubDateRegs[i]
+		}
+	}
+	return nil
+}
+
+func ParseDateMonth(monthStr string) (int, error) {
+	var err error
+	var month int
+
+	// try integer month number
+	month, err = strconv.Atoi(monthStr)
+	if nil == err {
+		return month, nil
+	}
+
+	// try short English month name
+	monthDate, err := time.Parse("Jan", monthStr)
+	if nil == err {
+		return int(monthDate.Month()), nil
+	}
+
+	// try long English month name
+	monthDate, err = time.Parse("January", monthStr)
+	if nil == err {
+		return int(monthDate.Month()), nil
+	}
+
+	return 0, errors.New("Failed to parse month string")
+}
+
+func ParsePubDate(formatReg *regexp.Regexp, dateStr string) (time.Time, error) {
+	if nil == formatReg {
+		log.Printf("[ERROR] error parsing pubdate, date format regexp is nil")
+		return time.Time{}, errors.New("date format regexp is nil")
+	}
+
+	pubdateStr := strings.TrimSpace(dateStr)
+	if "" == pubdateStr {
+		log.Printf("[ERROR] error parsing pubdate, pubdate string is empty")
+		return time.Time{}, errors.New("pubdate string is empty")
+	}
+
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+	day := now.Day()
+	hour := now.Hour()
+	minute := now.Minute()
+	second := now.Second()
+
+	match := formatReg.FindSubmatch([]byte(dateStr))
+	if nil == match {
+		log.Printf("[ERROR] error parsing pubdate %s, pattern %s match failed", pubdateStr, formatReg.String())
+		return time.Time{}, errors.New("failed to match pubdate pattern")
+	}
+	for patInd, patName := range formatReg.SubexpNames() {
+		var err error
+		patVal := string(match[patInd])
+		switch patName {
+		case PATTERN_YEAR:
+			year, err = strconv.Atoi(patVal)
+		case PATTERN_MONTH:
+			month, err = ParseDateMonth(patVal)
+		case PATTERN_DAY:
+			day, err = strconv.Atoi(patVal)
+		case PATTERN_HOUR:
+			hour, err = strconv.Atoi(patVal)
+		case PATTERN_MINUTE:
+			minute, err = strconv.Atoi(patVal)
+		case PATTERN_SECOND:
+			second, err = strconv.Atoi(patVal)
+		}
+
+		if nil != err {
+			log.Printf("[ERROR] error parsing pubdate: %s, time value %s cannot be parsed: %s",
+				pubdateStr,
+				match[patInd],
+				err,
+			)
+			return time.Time{}, err
+		}
+	}
+
+	return time.Date(year, time.Month(month), day, hour, minute, second, 0, GOFEED_DEFAULT_TIMEZONE), nil
 }
 
 func RemoveDuplicatEntries(feed *Feed) bool {
@@ -237,5 +296,19 @@ func RemoveJunkContent(feed *Feed) {
 		if nil != entry.Content && len(entry.Content) > 0 {
 			entry.Content = HTML_SCRIPT_TAG.ReplaceAll(entry.Content, []byte(""))
 		}
+	}
+}
+
+// generate pre-defined pattern name, PDP is short for Pre-defined Pattern
+func GenPDPName(pdp string) string {
+	return "{" + pdp + "}"
+}
+
+// generate pre-defined pattern regex string, PDP is short for Pre-defined Pattern
+func GenPDPRegexStr(pdp string, nonEmpty bool) string {
+	if nonEmpty {
+		return `(?P<` + pdp + `>(?s).+?)`
+	} else {
+		return `(?P<` + pdp + `>(?s).*?)`
 	}
 }
