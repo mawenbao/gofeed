@@ -8,7 +8,13 @@ import (
 	"time"
 )
 
+// First add trailing $ to the end of each pattern.
+// Then replace pre-defined patterns.
 func PatternToRegex(pat string) string {
+    if !strings.HasSuffix(pat, '$') {
+        pat += '$'
+    }
+
 	r := strings.NewReplacer(
 		PATTERN_ANY, PATTERN_ANY_REG,
 		GenPDPName(PATTERN_TITLE), GenPDPRegexStr(PATTERN_TITLE, true),
