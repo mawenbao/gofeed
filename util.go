@@ -249,6 +249,9 @@ func RemoveDuplicatEntries(feed *Feed) bool {
 	newEntryInd := 0
 
 	for _, entry := range feed.Entries {
+		if nil == entry.Link {
+			continue
+		}
 		link := entry.Link.String()
 		if !entryMap[link] {
 			entryMap[link] = true
