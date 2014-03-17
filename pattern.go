@@ -11,8 +11,8 @@ import (
 // First add trailing $ to the end of each pattern.
 // Then replace pre-defined patterns.
 func PatternToRegex(pat string) string {
-    if !strings.HasSuffix(pat, '$') {
-        pat += '$'
+    if !strings.HasSuffix(pat, "$") {
+        pat += "$"
     }
 
 	r := strings.NewReplacer(
