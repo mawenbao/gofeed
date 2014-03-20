@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // return later time
@@ -189,7 +190,7 @@ func ParsePubDate(formatReg *regexp.Regexp, dateStr string) (time.Time, error) {
 		return time.Time{}, errors.New("date format regexp is nil")
 	}
 
-	pubdateStr := strings.TrimSpace(dateStr)
+	pubdateStr := TrimAllSpace(dateStr)
 	if "" == pubdateStr {
 		log.Printf("[ERROR] error parsing pubdate, pubdate string is empty")
 		return time.Time{}, errors.New("pubdate string is empty")
@@ -322,4 +323,18 @@ func GenPDPRegexStr(pdp string, nonEmpty bool, nonGreedy bool) string {
 	}
 
 	return regStr + `)`
+}
+
+// trim all spaces including normal white-spaces, and full-length space(U+3000)
+func TrimAllSpaces(source string) string {
+	return strings.TrimFunc(source, func(r rune) bool {
+		if unicode.IsSpace(r) {
+			return true
+		}
+		switch r {
+		case '\u3000':
+			return true
+		}
+		return false
+	})
 }
