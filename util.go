@@ -308,10 +308,18 @@ func GenPDPName(pdp string) string {
 }
 
 // generate pre-defined pattern regex string, PDP is short for Pre-defined Pattern
-func GenPDPRegexStr(pdp string, nonEmpty bool) string {
+func GenPDPRegexStr(pdp string, nonEmpty bool, nonGreedy bool) string {
+	regStr := `(?P<` + pdp + `>(?s).`
+
 	if nonEmpty {
-		return `(?P<` + pdp + `>(?s).+?)`
+		regStr += `+`
 	} else {
-		return `(?P<` + pdp + `>(?s).*?)`
+		regStr += `*`
 	}
+
+	if nonGreedy {
+		regStr += `?`
+	}
+
+	return regStr + `)`
 }

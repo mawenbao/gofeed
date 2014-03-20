@@ -11,17 +11,17 @@ import (
 func PatternToRegex(pat string) string {
 	r := strings.NewReplacer(
 		PATTERN_ANY, PATTERN_ANY_REG,
-		GenPDPName(PATTERN_TITLE), GenPDPRegexStr(PATTERN_TITLE, true),
-		GenPDPName(PATTERN_LINK), GenPDPRegexStr(PATTERN_LINK, true),
-		GenPDPName(PATTERN_CONTENT), GenPDPRegexStr(PATTERN_CONTENT, false),
-		GenPDPName(PATTERN_FILTER), GenPDPRegexStr(PATTERN_FILTER, true),
-		GenPDPName(PATTERN_PUBDATE), GenPDPRegexStr(PATTERN_PUBDATE, true),
-		GenPDPName(PATTERN_YEAR), GenPDPRegexStr(PATTERN_YEAR, true),
-		GenPDPName(PATTERN_MONTH), GenPDPRegexStr(PATTERN_MONTH, true),
-		GenPDPName(PATTERN_DAY), GenPDPRegexStr(PATTERN_DAY, true),
-		GenPDPName(PATTERN_HOUR), GenPDPRegexStr(PATTERN_HOUR, true),
-		GenPDPName(PATTERN_MINUTE), GenPDPRegexStr(PATTERN_MINUTE, true),
-		GenPDPName(PATTERN_SECOND), GenPDPRegexStr(PATTERN_SECOND, true),
+		GenPDPName(PATTERN_TITLE), GenPDPRegexStr(PATTERN_TITLE, true, true),
+		GenPDPName(PATTERN_LINK), GenPDPRegexStr(PATTERN_LINK, true, true),
+		GenPDPName(PATTERN_CONTENT), GenPDPRegexStr(PATTERN_CONTENT, false, true),
+		GenPDPName(PATTERN_FILTER), GenPDPRegexStr(PATTERN_FILTER, true, true),
+		GenPDPName(PATTERN_PUBDATE), GenPDPRegexStr(PATTERN_PUBDATE, true, true),
+		GenPDPName(PATTERN_YEAR), GenPDPRegexStr(PATTERN_YEAR, true, true),
+		GenPDPName(PATTERN_MONTH), GenPDPRegexStr(PATTERN_MONTH, true, false),
+		GenPDPName(PATTERN_DAY), GenPDPRegexStr(PATTERN_DAY, true, false),
+		GenPDPName(PATTERN_HOUR), GenPDPRegexStr(PATTERN_HOUR, true, false),
+		GenPDPName(PATTERN_MINUTE), GenPDPRegexStr(PATTERN_MINUTE, true, false),
+		GenPDPName(PATTERN_SECOND), GenPDPRegexStr(PATTERN_SECOND, true, false),
 	)
 
 	return r.Replace(pat)

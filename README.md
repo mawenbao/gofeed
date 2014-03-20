@@ -73,7 +73,7 @@ You can use the following predefined patterns in `Feed.IndexPattern` and `Feed.C
 *  {pubdate}: publish date of feed entry
 *  {filter}: filtered content, used in Feed.IndexFilterPattern or Feed.ContentFilterPattern
 
-Date time format pattern, currently used for publish date string extraced from the {pubdate} pattern:
+Date time format pattern, currently used for publish date string extraced from the {pubdate} pattern. Note that, unlike other pre-defined patterns, all these date related patterns are greedy.
 
 *  {year}: must be an integer
 *  {month}: must be an integer, Jan or January.
