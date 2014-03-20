@@ -190,7 +190,7 @@ func ParsePubDate(formatReg *regexp.Regexp, dateStr string) (time.Time, error) {
 		return time.Time{}, errors.New("date format regexp is nil")
 	}
 
-	pubdateStr := TrimAllSpace(dateStr)
+	pubdateStr := TrimAllSpaces(dateStr)
 	if "" == pubdateStr {
 		log.Printf("[ERROR] error parsing pubdate, pubdate string is empty")
 		return time.Time{}, errors.New("pubdate string is empty")
