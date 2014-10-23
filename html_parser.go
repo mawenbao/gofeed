@@ -42,7 +42,7 @@ func ParseIndexHtml(feedTar *FeedTarget) (feed *Feed, ok bool) {
 
 	for urlInd, tarURL := range feedTar.URLs {
 		// get cache
-		indexCache, err := FetchHtml(tarURL, feedTar.CacheDB, feedTar.CacheLifetime)
+		indexCache, err := FetchHtml(tarURL, feedTar)
 		if nil == indexCache || nil != err {
 			log.Printf("[ERROR] failed to download index web page %s", tarURL.String())
 			// just ignore the sucker, feed.URL = nil
@@ -170,7 +170,7 @@ func ParseContentHtml(feedTar *FeedTarget, feed *Feed) (ok bool) {
 		}
 		time.Sleep(feedTar.ReqInterval * time.Second)
 
-		cache, err := FetchHtml(entry.Link, feedTar.CacheDB, feedTar.CacheLifetime)
+		cache, err := FetchHtml(entry.Link, feedTar)
 		if nil == cache || nil != err {
 			log.Printf("[ERROR] failed to download web page %s, will remove this entry", entry.Link.String())
 			// ignore this entry, entry.Cache = nil

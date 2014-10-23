@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // exits on any parse or check error
@@ -41,6 +42,11 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 		return
 	}
 
+	if conf.HttpTimeout < 0 {
+		log.Fatalf("wrong http timeout value: %f", conf.HttpTimeout)
+		return
+	}
+
 	feedTargets = make([]*FeedTarget, len(conf.Targets))
 
 	// check target settings
@@ -51,6 +57,7 @@ func ParseJsonConfig(path string) (feedTargets []*FeedTarget) {
 			CacheLifetime: cacheLifeTime,
 			ReqInterval:   tar.ReqInterval,
 			Description:   tar.Description,
+			HttpTimeout:   time.Millisecond * time.Duration(conf.HttpTimeout),
 		}
 
 		// abs feed path

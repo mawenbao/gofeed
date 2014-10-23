@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
+func SendHttpRequest(cache *HtmlCache, httpTimeout time.Duration) (resp *http.Response, err error) {
 	if *gVerbose {
 		log.Printf("start to request %s", cache.URL)
 	}
@@ -37,6 +37,7 @@ func SendHttpRequest(cache *HtmlCache) (resp *http.Response, err error) {
 
 	// send request
 	client := new(http.Client)
+	client.Timeout = httpTimeout
 	resp, err = client.Do(req)
 	if nil != err {
 		log.Printf("[ERROR] http client failed to send request to %s: %s", cache.URL.String(), err)
@@ -109,7 +110,11 @@ func ParseHttpResponse(resp *http.Response, cache *HtmlCache) (err error) {
 	return
 }
 
-func FetchHtml(normalURL *url.URL, dbPath string, cacheLifetime time.Duration) (cache *HtmlCache, err error) {
+func FetchHtml(normalURL *url.URL, feedTar *FeedTarget) (cache *HtmlCache, err error) {
+	dbPath := feedTar.CacheDB
+	cacheLifetime := feedTar.CacheLifetime
+	httpTimeout := feedTar.HttpTimeout
+
 	// try to retrive html from cache first
 	cache, err = GetHtmlCacheByURL(dbPath, normalURL.String())
 
@@ -154,7 +159,7 @@ func FetchHtml(normalURL *url.URL, dbPath string, cacheLifetime time.Duration) (
 
 	// cache not found, dead or expired, send new request
 	cache.URL = normalURL
-	resp, err := SendHttpRequest(cache)
+	resp, err := SendHttpRequest(cache, httpTimeout)
 	if nil != err {
 		if CACHE_NEW == cache.Status || !*gAlwaysUseCache {
 			log.Printf("[ERROR] failed to get %s, just ignore it", normalURL.String())

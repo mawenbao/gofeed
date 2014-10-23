@@ -1,6 +1,7 @@
 {
     "CacheDB": "cache.db",
     "CacheLifetime": "1s",
+    "HttpTimeout": 5000,
     "Targets": [
         {
             "Feed.Title": "mwb's blog",

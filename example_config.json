@@ -1,6 +1,7 @@
 {
     "CacheDB": "gofeed-cache.db",
     "CacheLifetime": "7d",
+    "HttpTimeout": 5000,
     "Targets": [
         {
             "Feed.Title": "虎嗅全文",

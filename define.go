@@ -74,6 +74,7 @@ var (
 type Config struct {
 	CacheDB       string         `json:"CacheDB"`
 	CacheLifetime string         `json:"CacheLifetime"` // "" means cache lives forever
+	HttpTimeout   int            `json:"HttpTimeout"`   // 0 means no timeout, in ms
 	Targets       []TargetConfig `json:"Targets"`
 }
 
@@ -103,6 +104,7 @@ type FeedTarget struct {
 	ReqInterval       time.Duration
 	CacheDB           string
 	CacheLifetime     time.Duration
+	HttpTimeout       time.Duration
 }
 
 type Feed struct {
